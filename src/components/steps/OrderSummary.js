@@ -372,11 +372,15 @@ export default function OrderSummary() {
       const pdfFilename = `SwapGate-Invoice-${timestamp}.pdf`;
       formData.append('user_summary_pdf', summaryPDFBlob, pdfFilename);
       
+      // Add exchange name
+      formData.append('exchange_name', exchangeData.exchange || '');
+      
       // Add exchange ID and amount as separate fields
       formData.append('exchange_id', exchangeData.exchangeId || '');
       formData.append('amount', exchangeData.usdtAmount || '');
       
       console.log('Sending files and data to API...');
+      console.log('Exchange Name:', exchangeData.exchange);
       console.log('Exchange ID:', exchangeData.exchangeId);
       console.log('Amount:', exchangeData.usdtAmount);
       

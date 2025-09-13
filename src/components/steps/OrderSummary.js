@@ -350,6 +350,13 @@ export default function OrderSummary() {
         toast.success('Order submitted successfully! PDF downloaded. Please contact support to complete the process.');
       }
       
+      // Wake up Render server before going to next step
+      try {
+        await fetch('https://swapgate-store-backend.onrender.com/api/health');
+        console.log('Render server wakeup API called');
+      } catch (err) {
+        console.warn('Render server wakeup API failed:', err);
+      }
       nextStep(); // Always go to thank you page
     } catch (error) {
       console.error('Error in checkout process:', error);

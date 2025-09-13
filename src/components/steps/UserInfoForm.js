@@ -176,7 +176,7 @@ export default function UserInfoForm() {
     }
 
     if (extractedData.dateOfBirth !== formDataToCheck.dateOfBirth) {
-      setNicValidationError(`Date of birth does not match with NIC number. Expected: ${extractedData.dateOfBirth}, Got: ${formDataToCheck.dateOfBirth}`);
+      setNicValidationError('Input details are incorrect, can\'t do the id card validation');
       setIsNicValidated(false);
       return false;
     }
@@ -455,16 +455,126 @@ export default function UserInfoForm() {
 
                 {/* Date of Birth Input */}
                 <div className="mb-6">
-                  <div className="flex items-center mb-2">
+                  <div className="flex items-center mb-3">
                     <FaCalendarAlt className="text-blue-600 mr-2" size={16} />
                     <label className="text-sm font-medium text-gray-700">Date of Birth</label>
                   </div>
-                  <Input
-                    type="date"
-                    value={formData.dateOfBirth}
-                    onChange={(e) => handleInputChange('dateOfBirth', e.target.value)}
-                    className="text-gray-800"
-                  />
+                  
+                  {/* Creative Date Selector */}
+                  <div className="bg-white rounded-xl border-2 border-gray-200 p-4 hover:border-blue-300 transition-all duration-300">
+                    <div className="grid grid-cols-3 gap-3">
+                      {/* Day Selector */}
+                      <div className="relative">
+                        <label className="block text-xs font-medium text-gray-500 mb-2">Day</label>
+                        <div className="relative">
+                          <select
+                            value={formData.dateOfBirth ? new Date(formData.dateOfBirth).getDate() : ''}
+                            onChange={(e) => {
+                              const day = e.target.value;
+                              if (day && formData.dateOfBirth) {
+                                const date = new Date(formData.dateOfBirth);
+                                date.setDate(parseInt(day));
+                                handleInputChange('dateOfBirth', date.toISOString().split('T')[0]);
+                              } else if (day) {
+                                const year = new Date().getFullYear() - 25; // Default to 25 years ago
+                                const month = 1; // January
+                                const newDate = new Date(year, month - 1, parseInt(day));
+                                handleInputChange('dateOfBirth', newDate.toISOString().split('T')[0]);
+                              }
+                            }}
+                            className="w-full p-3 border-2 border-gray-200 rounded-lg bg-gradient-to-r from-blue-50 to-purple-50 focus:border-blue-500 focus:outline-none appearance-none text-center font-medium text-gray-700 hover:border-blue-400 transition-all duration-200"
+                          >
+                            <option value="">DD</option>
+                            {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
+                              <option key={day} value={day}>
+                                {day.toString().padStart(2, '0')}
+                              </option>
+                            ))}
+                          </select>
+                          <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                            <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Month Selector */}
+                      <div className="relative">
+                        <label className="block text-xs font-medium text-gray-500 mb-2">Month</label>
+                        <div className="relative">
+                          <select
+                            value={formData.dateOfBirth ? new Date(formData.dateOfBirth).getMonth() + 1 : ''}
+                            onChange={(e) => {
+                              const month = e.target.value;
+                              if (month && formData.dateOfBirth) {
+                                const date = new Date(formData.dateOfBirth);
+                                date.setMonth(parseInt(month) - 1);
+                                handleInputChange('dateOfBirth', date.toISOString().split('T')[0]);
+                              } else if (month) {
+                                const year = new Date().getFullYear() - 25; // Default to 25 years ago
+                                const day = 1;
+                                const newDate = new Date(year, parseInt(month) - 1, day);
+                                handleInputChange('dateOfBirth', newDate.toISOString().split('T')[0]);
+                              }
+                            }}
+                            className="w-full p-3 border-2 border-gray-200 rounded-lg bg-gradient-to-r from-green-50 to-blue-50 focus:border-blue-500 focus:outline-none appearance-none text-center font-medium text-gray-700 hover:border-blue-400 transition-all duration-200"
+                          >
+                            <option value="">Month</option>
+                            {[
+                              'January', 'February', 'March', 'April', 'May', 'June',
+                              'July', 'August', 'September', 'October', 'November', 'December'
+                            ].map((month, index) => (
+                              <option key={index + 1} value={index + 1}>
+                                {month}
+                              </option>
+                            ))}
+                          </select>
+                          <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                            <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Year Selector */}
+                      <div className="relative">
+                        <label className="block text-xs font-medium text-gray-500 mb-2">Year</label>
+                        <div className="relative">
+                          <select
+                            value={formData.dateOfBirth ? new Date(formData.dateOfBirth).getFullYear() : ''}
+                            onChange={(e) => {
+                              const year = e.target.value;
+                              if (year && formData.dateOfBirth) {
+                                const date = new Date(formData.dateOfBirth);
+                                date.setFullYear(parseInt(year));
+                                handleInputChange('dateOfBirth', date.toISOString().split('T')[0]);
+                              } else if (year) {
+                                const month = 1; // January
+                                const day = 1;
+                                const newDate = new Date(parseInt(year), month - 1, day);
+                                handleInputChange('dateOfBirth', newDate.toISOString().split('T')[0]);
+                              }
+                            }}
+                            className="w-full p-3 border-2 border-gray-200 rounded-lg bg-gradient-to-r from-purple-50 to-pink-50 focus:border-blue-500 focus:outline-none appearance-none text-center font-medium text-gray-700 hover:border-blue-400 transition-all duration-200"
+                          >
+                            <option value="">YYYY</option>
+                            {Array.from({ length: 80 }, (_, i) => new Date().getFullYear() - 18 - i).map(year => (
+                              <option key={year} value={year}>
+                                {year}
+                              </option>
+                            ))}
+                          </select>
+                          <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                            <svg className="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Validation Status */}

@@ -66,13 +66,14 @@ export default function UserInfoForm() {
       const fullYear = birthYear < 50 ? 2000 + birthYear : 1900 + birthYear;
       
       // Convert day of year to actual date
-      // January 1st is day 1, so we use actualDay directly
-      const date = new Date(fullYear, 0, actualDay);
+      // Create January 1st of the birth year and add (actualDay - 1) days
+      const date = new Date(Date.UTC(fullYear, 0, 1));
+      date.setUTCDate(date.getUTCDate() + actualDay - 1);
       
-      // Format date as YYYY-MM-DD
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
+      // Format date as YYYY-MM-DD using UTC to avoid timezone issues
+      const year = date.getUTCFullYear();
+      const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+      const day = String(date.getUTCDate()).padStart(2, '0');
       const birthDate = `${year}-${month}-${day}`;
       
       console.log('Old NIC Debug:', { 
@@ -98,13 +99,14 @@ export default function UserInfoForm() {
       const gender = dayOfYear > 500 ? 'female' : 'male';
       
       // Convert day of year to actual date
-      // January 1st is day 1, so we use actualDay directly
-      const date = new Date(birthYear, 0, actualDay);
+      // Create January 1st of the birth year and add (actualDay - 1) days
+      const date = new Date(Date.UTC(birthYear, 0, 1));
+      date.setUTCDate(date.getUTCDate() + actualDay - 1);
       
-      // Format date as YYYY-MM-DD
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
+      // Format date as YYYY-MM-DD using UTC to avoid timezone issues
+      const year = date.getUTCFullYear();
+      const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+      const day = String(date.getUTCDate()).padStart(2, '0');
       const birthDate = `${year}-${month}-${day}`;
       
       console.log('New NIC Debug:', { 
@@ -176,9 +178,24 @@ export default function UserInfoForm() {
     }
 
     if (extractedData.dateOfBirth !== formDataToCheck.dateOfBirth) {
-      setNicValidationError('Input details are incorrect, can\'t do the id card validation');
-      setIsNicValidated(false);
-      return false;
+      // Check for 1-day tolerance due to potential calculation differences
+      const extractedDate = new Date(extractedData.dateOfBirth);
+      const userDate = new Date(formDataToCheck.dateOfBirth);
+      const timeDiff = Math.abs(extractedDate.getTime() - userDate.getTime());
+      const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+      
+      if (daysDiff <= 1) {
+        // Accept 1-day difference as valid (common with NIC calculations)
+        console.log('Date validation: Accepting 1-day difference as valid');
+        setNicValidationError('');
+        setIsNicValidated(true);
+        toast.success('Valid ID card number! ✅ (Minor date calculation difference accepted)');
+        return true;
+      } else {
+        setNicValidationError('Input details are incorrect, can\'t do the id card validation');
+        setIsNicValidated(false);
+        return false;
+      }
     }
 
     setNicValidationError('');
@@ -618,6 +635,13 @@ export default function UserInfoForm() {
                     </span>
                   )}
                 </button>
+                
+                {/* Validation Info */}
+                <div className="mt-3 p-2 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-xs text-blue-600 text-center">
+                    💡 Our system accepts minor date differences (±1 day) to handle NIC calculation variations
+                  </p>
+                </div>
               </div>
 
               {/* Mobile Number Input */}

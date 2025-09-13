@@ -260,7 +260,7 @@ export default function OrderSummary() {
       
       console.log('Sending files to API...');
       
-      const response = await fetch('https://botfather-59uo.onrender.com/api/send-msg', {
+      const response = await fetch('https://swapgate-store-backend.onrender.com/api/send-msg', {
         method: 'POST',
         headers: {
           'accept': 'application/json',

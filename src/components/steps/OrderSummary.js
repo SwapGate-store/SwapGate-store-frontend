@@ -6,7 +6,7 @@ import { useState, useRef } from 'react';
 import Image from 'next/image';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
-import { FaExchangeAlt, FaUniversity, FaUser, FaFileImage, FaCheckCircle } from 'react-icons/fa';
+import { FaExchangeAlt, FaUniversity, FaUser, FaFileImage, FaCheckCircle, FaSpinner, FaClock } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
@@ -17,6 +17,44 @@ export default function OrderSummary() {
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const invoiceRef = useRef(null);
+
+  // Helper function to wrap long text in PDF
+  const wrapText = (pdf, text, x, y, maxWidth, lineHeight = 8) => {
+    const words = text.split(' ');
+    let line = '';
+    let currentY = y;
+    
+    for (let i = 0; i < words.length; i++) {
+      const testLine = line + words[i] + ' ';
+      const textWidth = pdf.getTextWidth(testLine);
+      
+      if (textWidth > maxWidth && line !== '') {
+        pdf.text(line.trim(), x, currentY);
+        line = words[i] + ' ';
+        currentY += lineHeight;
+      } else {
+        line = testLine;
+      }
+    }
+    
+    if (line.trim() !== '') {
+      pdf.text(line.trim(), x, currentY);
+      currentY += lineHeight;
+    }
+    
+    return currentY;
+  };
+
+  // Helper function to split long addresses/IDs
+  const splitLongText = (text, maxLength = 25) => {
+    if (text.length <= maxLength) return [text];
+    
+    const chunks = [];
+    for (let i = 0; i < text.length; i += maxLength) {
+      chunks.push(text.substring(i, i + maxLength));
+    }
+    return chunks;
+  };
 
   const generateSimplePDF = () => {
     try {
@@ -34,14 +72,44 @@ export default function OrderSummary() {
       yPosition += 10;
       pdf.text(`Platform: ${exchangeData.exchange || 'N/A'}`, 30, yPosition);
       yPosition += 8;
-      pdf.text(`Exchange ID: ${exchangeData.exchangeId || 'N/A'}`, 30, yPosition);
+      
+      // Make Exchange ID bigger, bold, and dark red with text wrapping
+      pdf.setFontSize(16);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setTextColor(139, 0, 0); // Dark red color
+      
+      const exchangeId = exchangeData.exchangeId || 'N/A';
+      pdf.text('Exchange ID:', 30, yPosition);
+      yPosition += 10;
+      
+      // Split long exchange ID into multiple lines if needed
+      const idChunks = splitLongText(exchangeId, 35);
+      idChunks.forEach((chunk, index) => {
+        pdf.text(chunk, 30, yPosition);
+        if (index < idChunks.length - 1) yPosition += 8;
+      });
+      
+      // Reset to normal formatting
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setTextColor(0, 0, 0); // Black color
       
       yPosition += 15;
       pdf.text('Transaction Details:', 20, yPosition);
       yPosition += 10;
       pdf.text(`LKR Amount: ${exchangeData.lkrAmount || '0'}`, 30, yPosition);
       yPosition += 8;
+      
+      // Make USDT Amount bigger, bold, and dark red
+      pdf.setFontSize(16);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setTextColor(139, 0, 0); // Dark red color
       pdf.text(`USDT Amount: ${exchangeData.usdtAmount || '0'}`, 30, yPosition);
+      
+      // Reset to normal formatting
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setTextColor(0, 0, 0); // Black color
       
       if (exchangeData.bankDetails) {
         yPosition += 15;
@@ -59,6 +127,14 @@ export default function OrderSummary() {
         pdf.text(`Name: ${exchangeData.userInfo.name}`, 30, yPosition);
         yPosition += 8;
         pdf.text(`Mobile: ${exchangeData.userInfo.mobileNumber}`, 30, yPosition);
+        if (exchangeData.userInfo.nicNumber) {
+          yPosition += 8;
+          pdf.text(`NIC Number: ${exchangeData.userInfo.nicNumber}`, 30, yPosition);
+          yPosition += 8;
+          pdf.text(`Gender: ${exchangeData.userInfo.gender ? exchangeData.userInfo.gender.charAt(0).toUpperCase() + exchangeData.userInfo.gender.slice(1) : 'N/A'}`, 30, yPosition);
+          yPosition += 8;
+          pdf.text(`Date of Birth: ${exchangeData.userInfo.dateOfBirth || 'N/A'}`, 30, yPosition);
+        }
       }
       
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
@@ -212,14 +288,44 @@ export default function OrderSummary() {
       yPosition += 10;
       pdf.text(`Platform: ${exchangeData.exchange || 'N/A'}`, 30, yPosition);
       yPosition += 8;
-      pdf.text(`Exchange ID: ${exchangeData.exchangeId || 'N/A'}`, 30, yPosition);
+      
+      // Make Exchange ID bigger, bold, and dark red with text wrapping
+      pdf.setFontSize(16);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setTextColor(139, 0, 0); // Dark red color
+      
+      const exchangeId = exchangeData.exchangeId || 'N/A';
+      pdf.text('Exchange ID:', 30, yPosition);
+      yPosition += 10;
+      
+      // Split long exchange ID into multiple lines if needed
+      const idChunks = splitLongText(exchangeId, 35);
+      idChunks.forEach((chunk, index) => {
+        pdf.text(chunk, 30, yPosition);
+        if (index < idChunks.length - 1) yPosition += 8;
+      });
+      
+      // Reset to normal formatting
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setTextColor(0, 0, 0); // Black color
       
       yPosition += 15;
       pdf.text('Transaction Details:', 20, yPosition);
       yPosition += 10;
       pdf.text(`LKR Amount: ${exchangeData.lkrAmount || '0'}`, 30, yPosition);
       yPosition += 8;
+      
+      // Make USDT Amount bigger, bold, and dark red
+      pdf.setFontSize(16);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setTextColor(139, 0, 0); // Dark red color
       pdf.text(`USDT Amount: ${exchangeData.usdtAmount || '0'}`, 30, yPosition);
+      
+      // Reset to normal formatting
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setTextColor(0, 0, 0); // Black color
       
       if (exchangeData.bankDetails) {
         yPosition += 15;
@@ -237,6 +343,14 @@ export default function OrderSummary() {
         pdf.text(`Name: ${exchangeData.userInfo.name}`, 30, yPosition);
         yPosition += 8;
         pdf.text(`Mobile: ${exchangeData.userInfo.mobileNumber}`, 30, yPosition);
+        if (exchangeData.userInfo.nicNumber) {
+          yPosition += 8;
+          pdf.text(`NIC Number: ${exchangeData.userInfo.nicNumber}`, 30, yPosition);
+          yPosition += 8;
+          pdf.text(`Gender: ${exchangeData.userInfo.gender ? exchangeData.userInfo.gender.charAt(0).toUpperCase() + exchangeData.userInfo.gender.slice(1) : 'N/A'}`, 30, yPosition);
+          yPosition += 8;
+          pdf.text(`Date of Birth: ${exchangeData.userInfo.dateOfBirth || 'N/A'}`, 30, yPosition);
+        }
       }
       
       return pdf.output('blob');
@@ -300,6 +414,23 @@ export default function OrderSummary() {
     }
 
     setIsProcessing(true);
+    
+    // Show processing toast notification
+    const processingToast = toast.loading(
+      <div className="flex items-center">
+        <FaSpinner className="animate-spin mr-2" />
+        Processing your order... Please wait
+      </div>,
+      {
+        duration: 0, // Keep it visible until manually dismissed
+        style: {
+          background: '#3B82F6',
+          color: 'white',
+          fontWeight: '500',
+        },
+      }
+    );
+    
     let apiCallSuccess = false;
     
     try {
@@ -371,6 +502,8 @@ export default function OrderSummary() {
         toast.error(`Order processing error: ${error.message}. Please try again or contact support.`);
       }
     } finally {
+      // Dismiss the processing toast
+      toast.dismiss(processingToast);
       setIsProcessing(false);
     }
   };
@@ -480,14 +613,6 @@ export default function OrderSummary() {
                     </p>
                   </div>
                 </div>
-                <div className="mt-4 pt-4 border-t border-green-300">
-                  <div className="flex justify-between items-center">
-                    <span className="text-green-700">Exchange Rate:</span>
-                    <span className="font-semibold text-green-800">
-                      1 USDT = LKR {exchangeData.exchangeRate || '320.00'}
-                    </span>
-                  </div>
-                </div>
               </div>
             </div>
 
@@ -548,6 +673,27 @@ export default function OrderSummary() {
                       <p className="font-semibold text-gray-800">{exchangeData.userInfo.mobileNumber}</p>
                       <p className="text-xs text-gray-500">WhatsApp / Telegram contact</p>
                     </div>
+                    {exchangeData.userInfo.nicNumber && (
+                      <>
+                        <div>
+                          <p className="text-sm text-gray-600 mb-1">NIC Number</p>
+                          <p className="font-semibold text-gray-800 font-mono">{exchangeData.userInfo.nicNumber}</p>
+                          <p className="text-xs text-green-600 flex items-center mt-1">
+                            <FaCheckCircle className="mr-1" size={12} />
+                            Verified Identity
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600 mb-1">Personal Details</p>
+                          <p className="font-semibold text-gray-800">
+                            {exchangeData.userInfo.gender ? exchangeData.userInfo.gender.charAt(0).toUpperCase() + exchangeData.userInfo.gender.slice(1) : 'N/A'}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            DOB: {exchangeData.userInfo.dateOfBirth || 'N/A'}
+                          </p>
+                        </div>
+                      </>
+                    )}
                   </div>
                   
                   {exchangeData.bankReceipt && (
@@ -624,13 +770,23 @@ export default function OrderSummary() {
             variant="secondary"
             onClick={handleCheckout}
             disabled={!isConfirmed || isProcessing}
-            className={`${
-              !isConfirmed || isProcessing
+            className={`transition-all duration-200 ${
+              isProcessing
+                ? 'bg-blue-600 text-white cursor-wait animate-pulse' 
+                : !isConfirmed
                 ? 'opacity-50 cursor-not-allowed' 
-                : ''
+                : 'hover:shadow-lg transform hover:scale-105'
             }`}
           >
-            {isProcessing ? 'Processing...' : 'Complete Order →'}
+            {isProcessing ? (
+              <div className="flex items-center justify-center">
+                <FaSpinner className="animate-spin mr-2" size={16} />
+                <span>Processing Order...</span>
+                <FaClock className="ml-2 opacity-70" size={14} />
+              </div>
+            ) : (
+              'Complete Order →'
+            )}
           </Button>
         </div>
       </div>

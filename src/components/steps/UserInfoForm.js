@@ -6,17 +6,22 @@ import { useState, useRef } from 'react';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
-import { FaCloudUploadAlt, FaCheckCircle, FaTimes, FaFile } from 'react-icons/fa';
+import { FaExchangeAlt, FaUniversity, FaUser, FaFileImage, FaCheckCircle, FaIdCard, FaVenus, FaMars, FaCalendarAlt, FaShieldAlt, FaExclamationTriangle, FaCloudUploadAlt, FaTimes, FaFile } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
 
 export default function UserInfoForm() {
   const { nextStep, prevStep, updateExchangeData } = useExchange();
   const [formData, setFormData] = useState({
     name: '',
+    nicNumber: '',
+    gender: '',
+    dateOfBirth: '',
     mobileNumber: ''
   });
   const [uploadedFile, setUploadedFile] = useState(null);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [nicValidationError, setNicValidationError] = useState('');
+  const [isNicValidated, setIsNicValidated] = useState(false);
   const fileInputRef = useRef(null);
 
   const handleInputChange = (field, value) => {
@@ -24,6 +29,179 @@ export default function UserInfoForm() {
       ...prev,
       [field]: value
     }));
+
+    // Clear NIC validation status when user changes any NIC-related field
+    if (field === 'nicNumber' || field === 'gender' || field === 'dateOfBirth') {
+      setNicValidationError('');
+      setIsNicValidated(false);
+    }
+  };
+
+  // Sri Lankan NIC validation functions
+  const validateOldNIC = (nic) => {
+    const regex = /^[0-9]{9}[vVxX]$/;
+    return regex.test(nic);
+  };
+
+  const validateNewNIC = (nic) => {
+    const regex = /^[0-9]{12}$/;
+    return regex.test(nic);
+  };
+
+  const extractDataFromNIC = (nic) => {
+    if (!nic) return null;
+
+    const cleanNIC = nic.toString().toUpperCase();
+    
+    if (validateOldNIC(cleanNIC)) {
+      // Old format: 123456789V
+      const birthYear = parseInt(cleanNIC.substring(0, 2));
+      const dayOfYear = parseInt(cleanNIC.substring(2, 5));
+      
+      // Determine gender (if day > 500, it's female)
+      const actualDay = dayOfYear > 500 ? dayOfYear - 500 : dayOfYear;
+      const gender = dayOfYear > 500 ? 'female' : 'male';
+      
+      // Calculate birth year (assuming births before 1950 are in 2000s, after 1950 are in 1900s)
+      const fullYear = birthYear < 50 ? 2000 + birthYear : 1900 + birthYear;
+      
+      // Convert day of year to actual date
+      // January 1st is day 1, so we use actualDay directly
+      const date = new Date(fullYear, 0, actualDay);
+      
+      // Format date as YYYY-MM-DD
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const birthDate = `${year}-${month}-${day}`;
+      
+      console.log('Old NIC Debug:', { 
+        cleanNIC, 
+        birthYear, 
+        dayOfYear, 
+        actualDay, 
+        fullYear, 
+        calculatedDate: date,
+        birthDate,
+        gender 
+      });
+      
+      return { gender, dateOfBirth: birthDate, valid: true };
+    } 
+    else if (validateNewNIC(cleanNIC)) {
+      // New format: 199012345678
+      const birthYear = parseInt(cleanNIC.substring(0, 4));
+      const dayOfYear = parseInt(cleanNIC.substring(4, 7));
+      
+      // Determine gender
+      const actualDay = dayOfYear > 500 ? dayOfYear - 500 : dayOfYear;
+      const gender = dayOfYear > 500 ? 'female' : 'male';
+      
+      // Convert day of year to actual date
+      // January 1st is day 1, so we use actualDay directly
+      const date = new Date(birthYear, 0, actualDay);
+      
+      // Format date as YYYY-MM-DD
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const birthDate = `${year}-${month}-${day}`;
+      
+      console.log('New NIC Debug:', { 
+        cleanNIC, 
+        birthYear, 
+        dayOfYear, 
+        actualDay, 
+        calculatedDate: date,
+        birthDate,
+        gender 
+      });
+      
+      return { gender, dateOfBirth: birthDate, valid: true };
+    }
+    
+    return { valid: false };
+  };
+
+  const validateNICData = () => {
+    if (!formData.nicNumber || !formData.gender || !formData.dateOfBirth) {
+      return true; // Don't validate if fields are empty
+    }
+
+    const extractedData = extractDataFromNIC(formData.nicNumber);
+    
+    if (!extractedData.valid) {
+      setNicValidationError('Invalid NIC number format');
+      return false;
+    }
+
+    // Check if entered data matches extracted data
+    if (extractedData.gender !== formData.gender) {
+      setNicValidationError('Gender does not match with NIC number');
+      return false;
+    }
+
+    if (extractedData.dateOfBirth !== formData.dateOfBirth) {
+      setNicValidationError('Date of birth does not match with NIC number');
+      return false;
+    }
+
+    setNicValidationError('');
+    return true;
+  };
+
+  const validateNICWithUserData = (formDataToCheck) => {
+    const extractedData = extractDataFromNIC(formDataToCheck.nicNumber);
+    
+    console.log('Validation Debug:', {
+      userInput: {
+        nic: formDataToCheck.nicNumber,
+        gender: formDataToCheck.gender,
+        dateOfBirth: formDataToCheck.dateOfBirth
+      },
+      extractedData: extractedData
+    });
+    
+    if (!extractedData.valid) {
+      setNicValidationError('Invalid NIC number format');
+      setIsNicValidated(false);
+      return false;
+    }
+
+    // Check if entered data matches extracted data
+    if (extractedData.gender !== formDataToCheck.gender) {
+      setNicValidationError(`Gender does not match with NIC number. Expected: ${extractedData.gender}, Got: ${formDataToCheck.gender}`);
+      setIsNicValidated(false);
+      return false;
+    }
+
+    if (extractedData.dateOfBirth !== formDataToCheck.dateOfBirth) {
+      setNicValidationError(`Date of birth does not match with NIC number. Expected: ${extractedData.dateOfBirth}, Got: ${formDataToCheck.dateOfBirth}`);
+      setIsNicValidated(false);
+      return false;
+    }
+
+    setNicValidationError('');
+    setIsNicValidated(true);
+    toast.success('Valid ID card number! ✅');
+    return true;
+  };
+
+  const handleValidateNIC = () => {
+    if (!formData.nicNumber.trim()) {
+      toast.error('Please enter your NIC number');
+      return;
+    }
+    if (!formData.gender) {
+      toast.error('Please select your gender');
+      return;
+    }
+    if (!formData.dateOfBirth) {
+      toast.error('Please enter your date of birth');
+      return;
+    }
+
+    validateNICWithUserData(formData);
   };
 
   const handleFileUpload = (file) => {
@@ -85,12 +263,29 @@ export default function UserInfoForm() {
       toast.error('Please enter your name');
       return;
     }
+    if (!formData.nicNumber.trim()) {
+      toast.error('Please enter your NIC number');
+      return;
+    }
+    if (!formData.gender) {
+      toast.error('Please select your gender');
+      return;
+    }
+    if (!formData.dateOfBirth) {
+      toast.error('Please enter your date of birth');
+      return;
+    }
     if (!formData.mobileNumber.trim()) {
       toast.error('Please enter your mobile number');
       return;
     }
     if (!uploadedFile) {
       toast.error('Please upload your bank receipt');
+      return;
+    }
+
+    if (!isNicValidated) {
+      toast.error('Please validate your NIC details first');
       return;
     }
 
@@ -125,7 +320,10 @@ export default function UserInfoForm() {
             transition={{ delay: 0.2 }}
           >
             <Card className="p-6 h-full">
-              <h2 className="text-xl font-semibold text-gray-800 mb-6">Personal Information</h2>
+              <div className="flex items-center mb-6">
+                <FaUser className="text-blue-600 mr-3" size={24} />
+                <h2 className="text-xl font-semibold text-gray-800">Personal Information</h2>
+              </div>
               
               {/* Name Input */}
               <div className="mb-6">
@@ -136,6 +334,180 @@ export default function UserInfoForm() {
                   placeholder="Enter your full name"
                   className="text-gray-800"
                 />
+              </div>
+
+              {/* ID Verification Section */}
+              <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6 mb-6 border-2 border-blue-100">
+                <div className="flex items-center mb-4">
+                  <FaShieldAlt className="text-blue-600 mr-3" size={20} />
+                  <h3 className="text-lg font-semibold text-gray-800">Identity Verification</h3>
+                  {isNicValidated && (
+                    <FaCheckCircle className="text-green-500 ml-auto" size={20} />
+                  )}
+                </div>
+
+                {/* Progress Steps */}
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center space-x-2 flex-shrink-0">
+                    <div className={`w-8 h-8 min-w-[2rem] min-h-[2rem] rounded-full flex items-center justify-center text-sm font-semibold ${
+                      formData.nicNumber ? 'bg-blue-600 text-white' : 'bg-gray-300 text-gray-600'
+                    }`}>
+                      1
+                    </div>
+                    <span className="text-sm text-gray-600 whitespace-nowrap">NIC Number</span>
+                  </div>
+                  <div className={`h-1 flex-1 mx-2 ${formData.nicNumber && formData.gender ? 'bg-blue-600' : 'bg-gray-300'}`}></div>
+                  <div className="flex items-center space-x-2 flex-shrink-0">
+                    <div className={`w-8 h-8 min-w-[2rem] min-h-[2rem] rounded-full flex items-center justify-center text-sm font-semibold ${
+                      formData.gender ? 'bg-blue-600 text-white' : 'bg-gray-300 text-gray-600'
+                    }`}>
+                      2
+                    </div>
+                    <span className="text-sm text-gray-600 whitespace-nowrap">Gender</span>
+                  </div>
+                  <div className={`h-1 flex-1 mx-2 ${formData.dateOfBirth && formData.gender ? 'bg-blue-600' : 'bg-gray-300'}`}></div>
+                  <div className="flex items-center space-x-2 flex-shrink-0">
+                    <div className={`w-8 h-8 min-w-[2rem] min-h-[2rem] rounded-full flex items-center justify-center text-sm font-semibold ${
+                      formData.dateOfBirth ? 'bg-blue-600 text-white' : 'bg-gray-300 text-gray-600'
+                    }`}>
+                      3
+                    </div>
+                    <span className="text-sm text-gray-600 whitespace-nowrap">Birth Date</span>
+                  </div>
+                  <div className={`h-1 flex-1 mx-2 ${isNicValidated ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                  <div className="flex items-center space-x-2 flex-shrink-0">
+                    <div className={`w-8 h-8 min-w-[2rem] min-h-[2rem] rounded-full flex items-center justify-center text-sm font-semibold ${
+                      isNicValidated ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-600'
+                    }`}>
+                      ✓
+                    </div>
+                    <span className="text-sm text-gray-600 whitespace-nowrap">Verified</span>
+                  </div>
+                </div>
+
+                {/* NIC Number Input */}
+                <div className="mb-4">
+                  <div className="flex items-center mb-2">
+                    <FaIdCard className="text-blue-600 mr-2" size={16} />
+                    <label className="text-sm font-medium text-gray-700">
+                      National Identity Card Number
+                    </label>
+                  </div>
+                  <Input
+                    value={formData.nicNumber}
+                    onChange={(e) => handleInputChange('nicNumber', e.target.value)}
+                    placeholder="Enter your NIC number (e.g., 123456789V or 199012345678)"
+                    className="text-gray-800"
+                  />
+                  <div className="flex items-center mt-2 space-x-4">
+                    <div className="flex items-center text-xs text-gray-500">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full mr-1"></div>
+                      Old format: 9 digits + V
+                    </div>
+                    <div className="flex items-center text-xs text-gray-500">
+                      <div className="w-2 h-2 bg-purple-500 rounded-full mr-1"></div>
+                      New format: 12 digits
+                    </div>
+                  </div>
+                </div>
+
+                {/* Gender Selection */}
+                <div className="mb-4">
+                  <div className="flex items-center mb-3">
+                    <span className="text-blue-600 mr-2">👤</span>
+                    <label className="text-sm font-medium text-gray-700">Gender</label>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <label className={`flex items-center justify-center p-3 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
+                      formData.gender === 'male' 
+                        ? 'border-blue-500 bg-blue-50 text-blue-700' 
+                        : 'border-gray-300 hover:border-blue-300 hover:bg-blue-50 text-gray-600 hover:text-blue-600'
+                    }`}>
+                      <input
+                        type="radio"
+                        name="gender"
+                        value="male"
+                        checked={formData.gender === 'male'}
+                        onChange={(e) => handleInputChange('gender', e.target.value)}
+                        className="sr-only"
+                      />
+                      <FaMars className={`mr-2 ${formData.gender === 'male' ? 'text-blue-600' : 'text-gray-500'}`} />
+                      <span className="font-medium">Male</span>
+                    </label>
+                    <label className={`flex items-center justify-center p-3 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
+                      formData.gender === 'female' 
+                        ? 'border-pink-500 bg-pink-50 text-pink-700' 
+                        : 'border-gray-300 hover:border-pink-300 hover:bg-pink-50 text-gray-600 hover:text-pink-600'
+                    }`}>
+                      <input
+                        type="radio"
+                        name="gender"
+                        value="female"
+                        checked={formData.gender === 'female'}
+                        onChange={(e) => handleInputChange('gender', e.target.value)}
+                        className="sr-only"
+                      />
+                      <FaVenus className={`mr-2 ${formData.gender === 'female' ? 'text-pink-600' : 'text-gray-500'}`} />
+                      <span className="font-medium">Female</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Date of Birth Input */}
+                <div className="mb-6">
+                  <div className="flex items-center mb-2">
+                    <FaCalendarAlt className="text-blue-600 mr-2" size={16} />
+                    <label className="text-sm font-medium text-gray-700">Date of Birth</label>
+                  </div>
+                  <Input
+                    type="date"
+                    value={formData.dateOfBirth}
+                    onChange={(e) => handleInputChange('dateOfBirth', e.target.value)}
+                    className="text-gray-800"
+                  />
+                </div>
+
+                {/* Validation Status */}
+                {nicValidationError && (
+                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start">
+                    <FaExclamationTriangle className="text-red-500 mr-2 mt-0.5 flex-shrink-0" size={16} />
+                    <p className="text-sm text-red-600">{nicValidationError}</p>
+                  </div>
+                )}
+
+                {isNicValidated && (
+                  <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center">
+                    <FaCheckCircle className="text-green-500 mr-2" size={16} />
+                    <p className="text-sm text-green-600 font-medium">
+                      ✅ Your identity card details have been verified successfully
+                    </p>
+                  </div>
+                )}
+
+                {/* Validate Button */}
+                <button
+                  onClick={handleValidateNIC}
+                  disabled={!formData.nicNumber.trim() || !formData.gender || !formData.dateOfBirth}
+                  className={`w-full py-3 px-4 rounded-lg font-semibold text-sm transition-all duration-200 transform ${
+                    isNicValidated
+                      ? 'bg-green-500 hover:bg-green-600 text-white shadow-lg hover:shadow-xl'
+                      : !formData.nicNumber.trim() || !formData.gender || !formData.dateOfBirth
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl hover:scale-105'
+                  }`}
+                >
+                  {isNicValidated ? (
+                    <span className="flex items-center justify-center">
+                      <FaCheckCircle className="mr-2" />
+                      Identity Verified
+                    </span>
+                  ) : (
+                    <span className="flex items-center justify-center">
+                      <FaShieldAlt className="mr-2" />
+                      Validate Identity Card
+                    </span>
+                  )}
+                </button>
               </div>
 
               {/* Mobile Number Input */}
@@ -236,6 +608,10 @@ export default function UserInfoForm() {
                     <span className="text-yellow-600 mr-1">•</span>
                     <span>රිසිට් පත් දෙකක් හෝ කිහිපයක් ඇත්නම එවා තනි රිසිට්පතක් ලෙස Upload කරන්න</span>
                   </li>
+                  <li className="flex items-start">
+                    <span className="text-yellow-600 mr-1">•</span>
+                    <span>USDT,CRYPTO,FOREX,BINANCE වැනි වචන REMARK තුල යෙදීමෙන් වලකින්න</span>
+                  </li>
                 </ul>
               </div>
             </Card>
@@ -250,9 +626,9 @@ export default function UserInfoForm() {
           <Button 
             variant="secondary"
             onClick={handleNext}
-            disabled={!formData.name.trim() || !formData.mobileNumber.trim() || !uploadedFile}
+            disabled={!formData.name.trim() || !formData.nicNumber.trim() || !formData.gender || !formData.dateOfBirth || !formData.mobileNumber.trim() || !uploadedFile || !isNicValidated}
             className={`${
-              !formData.name.trim() || !formData.mobileNumber.trim() || !uploadedFile
+              !formData.name.trim() || !formData.nicNumber.trim() || !formData.gender || !formData.dateOfBirth || !formData.mobileNumber.trim() || !uploadedFile || !isNicValidated
                 ? 'opacity-50 cursor-not-allowed' 
                 : ''
             }`}

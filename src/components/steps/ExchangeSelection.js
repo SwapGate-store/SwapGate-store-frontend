@@ -23,12 +23,12 @@ export default function ExchangeSelection() {
     {
       id: 'mexc',
       logo: '/assets/mexclogo.png',
-      placeholder: 'Enter TRC20 Address'
+      placeholder: 'Enter BNB smart chain (BEP20) Address'
     },
     {
       id: 'bybit',
       logo: '/assets/bybitlogo.png',
-      placeholder: 'Enter TRC20 Address'
+      placeholder: 'Enter BNB smart chain (BEP20) Address'
     }
   ];
 
@@ -96,7 +96,11 @@ export default function ExchangeSelection() {
                     alt={`${exchange.id} logo`}
                     width={96}
                     height={96}
-                    className="h-24 mx-auto object-contain"
+                    className={`mx-auto object-contain h-24 ${
+                      exchange.id === 'binance' || exchange.id === 'mexc' 
+                        ? 'transform scale-145' 
+                        : ''
+                    }`}
                   />
                 </div>
               </Card>
@@ -112,7 +116,7 @@ export default function ExchangeSelection() {
           className="max-w-md mx-auto mb-8"
         >
           <Input
-            label={`Enter your ${selectedExchange?.id === 'binance' ? 'Binance User ID' : 'Exchange ID or TRC20 Address'}`}
+            label={`Enter your ${selectedExchange?.id === 'binance' ? 'Binance User ID' : 'Exchange ID or BNB smart chain (BEP20) Address'}`}
             value={exchangeId}
             onChange={(e) => setExchangeId(e.target.value)}
             className="text-center text-black font-semibold text-lg tracking-wide"

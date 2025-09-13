@@ -75,6 +75,7 @@ export default function AmountCalculator() {
           </h1>
           <p className="text-lg text-gray-600">
             Convert LKR to USDT with dynamic pricing
+            (USDT මිලදී ගැනීමට අවශ්‍ය රුපියල් ප්‍රමානය ඇතුලත් කරන්න )
           </p>
         </div>
 

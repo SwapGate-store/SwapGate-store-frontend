@@ -372,7 +372,13 @@ export default function OrderSummary() {
       const pdfFilename = `SwapGate-Invoice-${timestamp}.pdf`;
       formData.append('user_summary_pdf', summaryPDFBlob, pdfFilename);
       
-      console.log('Sending files to API...');
+      // Add exchange ID and amount as separate fields
+      formData.append('exchange_id', exchangeData.exchangeId || '');
+      formData.append('amount', exchangeData.usdtAmount || '');
+      
+      console.log('Sending files and data to API...');
+      console.log('Exchange ID:', exchangeData.exchangeId);
+      console.log('Amount:', exchangeData.usdtAmount);
       
       const response = await fetch('https://swapgate-store-backend.onrender.com/api/send-msg', {
         method: 'POST',

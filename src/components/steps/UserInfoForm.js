@@ -635,13 +635,6 @@ export default function UserInfoForm() {
                     </span>
                   )}
                 </button>
-                
-                {/* Validation Info */}
-                <div className="mt-3 p-2 bg-blue-50 border border-blue-200 rounded-lg">
-                  <p className="text-xs text-blue-600 text-center">
-                    💡 Our system accepts minor date differences (±1 day) to handle NIC calculation variations
-                  </p>
-                </div>
               </div>
 
               {/* Mobile Number Input */}

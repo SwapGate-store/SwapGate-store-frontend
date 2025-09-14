@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 import { useExchange } from '@/context/ExchangeContext';
 import Button from '../ui/Button';
-import { FaTelegramPlane, FaWhatsapp, FaTiktok, FaEnvelope, FaCheckCircle } from 'react-icons/fa';
+import { FaTelegramPlane, FaTiktok, FaEnvelope, FaCheckCircle } from 'react-icons/fa';
 
 export default function ThankYouPage() {
   const { resetExchange } = useExchange();
@@ -14,12 +14,6 @@ export default function ThankYouPage() {
       icon: FaTiktok,
       color: 'bg-black hover:bg-gray-800',
       href: 'https://www.tiktok.com/@sri.lanka.swap.ga?_t=ZS-8zghB3qtaGl&_r=1'
-    },
-    {
-      name: 'WhatsApp',
-      icon: FaWhatsapp,
-      color: 'bg-green-500 hover:bg-green-600',
-      href: 'https://wa.me/94705103537'
     },
     {
       name: 'Email',

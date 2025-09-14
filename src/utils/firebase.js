@@ -5,7 +5,8 @@ import {
   setDoc, 
   addDoc, 
   collection, 
-  serverTimestamp 
+  serverTimestamp,
+  onSnapshot 
 } from 'firebase/firestore';
 
 // Get USDT price from admin settings
@@ -109,4 +110,68 @@ export async function sendToExternalAPI(orderData) {
     console.error('Error sending to external API:', error);
     throw error;
   }
+}
+
+// Store Settings Firebase Functions
+
+// Get store mode from Firebase
+export async function getStoreMode() {
+  try {
+    const docRef = doc(db, 'admin', 'storeSettings');
+    const docSnap = await getDoc(docRef);
+    
+    if (docSnap.exists()) {
+      return docSnap.data().mode || 'normal';
+    } else {
+      // Initialize with default mode if not exists
+      await updateStoreMode('normal');
+      return 'normal';
+    }
+  } catch (error) {
+    console.error('Error fetching store mode:', error);
+    return 'normal'; // fallback to normal mode
+  }
+}
+
+// Update store mode in Firebase
+export async function updateStoreMode(mode) {
+  try {
+    // Validate mode
+    if (!['24x7', 'normal', 'closed'].includes(mode)) {
+      throw new Error('Invalid store mode');
+    }
+
+    const docRef = doc(db, 'admin', 'storeSettings');
+    await setDoc(docRef, {
+      mode: mode,
+      updatedAt: serverTimestamp(),
+      updatedBy: 'admin' // You can enhance this with actual user data
+    });
+    
+    console.log('Store mode updated to:', mode);
+    return true;
+  } catch (error) {
+    console.error('Error updating store mode:', error);
+    return false;
+  }
+}
+
+// Subscribe to store mode changes (real-time updates)
+export function subscribeToStoreMode(callback) {
+  const docRef = doc(db, 'admin', 'storeSettings');
+  
+  return onSnapshot(docRef, (docSnap) => {
+    if (docSnap.exists()) {
+      const mode = docSnap.data().mode || 'normal';
+      callback(mode);
+    } else {
+      // Initialize with default mode if document doesn't exist
+      updateStoreMode('normal').then(() => {
+        callback('normal');
+      });
+    }
+  }, (error) => {
+    console.error('Error listening to store mode changes:', error);
+    callback('normal'); // fallback
+  });
 }

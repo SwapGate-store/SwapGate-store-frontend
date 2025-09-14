@@ -1,6 +1,7 @@
 'use client'
 
 import { createContext, useContext, useState, useEffect } from 'react';
+import { getStoreMode, updateStoreMode as updateStoreModeFirebase, subscribeToStoreMode } from '@/utils/firebase';
 
 const StoreSettingsContext = createContext();
 
@@ -15,6 +16,7 @@ export const useStoreSettings = () => {
 export const StoreSettingsProvider = ({ children }) => {
   // Store operation modes: '24x7', 'normal', 'closed'
   const [storeMode, setStoreMode] = useState('normal');
+  const [isLoading, setIsLoading] = useState(true);
   
   // Check if store is currently open based on the selected mode
   const isStoreOpen = () => {
@@ -78,10 +80,28 @@ export const StoreSettingsProvider = ({ children }) => {
   };
 
   // Admin function to update store mode
-  const updateStoreMode = (mode) => {
+  const updateStoreMode = async (mode) => {
     if (['24x7', 'normal', 'closed'].includes(mode)) {
-      setStoreMode(mode);
-      localStorage.setItem('storeMode', mode);
+      setIsLoading(true);
+      try {
+        const success = await updateStoreModeFirebase(mode);
+        if (success) {
+          // The real-time listener will update the state
+          console.log('Store mode update sent to Firebase');
+        } else {
+          console.error('Failed to update store mode in Firebase');
+          // Keep localStorage as fallback
+          localStorage.setItem('storeMode', mode);
+          setStoreMode(mode);
+        }
+      } catch (error) {
+        console.error('Error updating store mode:', error);
+        // Keep localStorage as fallback
+        localStorage.setItem('storeMode', mode);
+        setStoreMode(mode);
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -99,12 +119,44 @@ export const StoreSettingsProvider = ({ children }) => {
     }
   };
 
-  // Load settings from localStorage on mount
+  // Load settings from Firebase on mount and subscribe to changes
   useEffect(() => {
-    const savedMode = localStorage.getItem('storeMode');
-    if (savedMode && ['24x7', 'normal', 'closed'].includes(savedMode)) {
-      setStoreMode(savedMode);
-    }
+    let unsubscribe = null;
+    
+    const initializeStoreSettings = async () => {
+      try {
+        // First, try to get the current mode from Firebase
+        const mode = await getStoreMode();
+        setStoreMode(mode);
+        
+        // Then subscribe to real-time updates
+        unsubscribe = subscribeToStoreMode((newMode) => {
+          setStoreMode(newMode);
+          // Also update localStorage as backup
+          localStorage.setItem('storeMode', newMode);
+        });
+        
+      } catch (error) {
+        console.error('Error initializing store settings:', error);
+        
+        // Fallback to localStorage if Firebase fails
+        const savedMode = localStorage.getItem('storeMode');
+        if (savedMode && ['24x7', 'normal', 'closed'].includes(savedMode)) {
+          setStoreMode(savedMode);
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initializeStoreSettings();
+
+    // Cleanup subscription on unmount
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
   }, []);
 
   const value = {
@@ -112,7 +164,8 @@ export const StoreSettingsProvider = ({ children }) => {
     updateStoreMode,
     isStoreOpen: isStoreOpen(),
     getStoreStatus,
-    getStoreModeDisplay
+    getStoreModeDisplay,
+    isLoading
   };
 
   return (

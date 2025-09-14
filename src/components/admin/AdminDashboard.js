@@ -23,7 +23,8 @@ export default function AdminDashboard({ onLogout }) {
     updateStoreMode,
     isStoreOpen,
     getStoreStatus,
-    getStoreModeDisplay
+    getStoreModeDisplay,
+    isLoading: storeSettingsLoading
   } = useStoreSettings();
 
   const [formData, setFormData] = useState({
@@ -37,6 +38,17 @@ export default function AdminDashboard({ onLogout }) {
   });
 
   const storeStatus = getStoreStatus();
+
+  // Store mode update handlers
+  const handleStoreModeUpdate = async (mode, successMessage) => {
+    try {
+      await updateStoreMode(mode);
+      toast.success(successMessage);
+    } catch (error) {
+      console.error('Error updating store mode:', error);
+      toast.error('Failed to update store mode. Please try again.');
+    }
+  };
 
   // Initialize form data when context loads
   useEffect(() => {
@@ -165,16 +177,20 @@ export default function AdminDashboard({ onLogout }) {
             <div className="space-y-4">
               <h3 className="font-medium text-gray-900 mb-4">Store Operation Modes</h3>
               
+              {storeSettingsLoading ? (
+                <div className="flex items-center justify-center p-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  <span className="ml-2 text-gray-600">Loading store settings...</span>
+                </div>
+              ) : (
+                <>
               {/* 24x7 Open Mode */}
               <div className={`border-2 rounded-lg p-4 cursor-pointer transition-all duration-200 ${
                 storeMode === '24x7' 
                   ? 'border-green-500 bg-green-50' 
                   : 'border-gray-200 hover:border-green-300'
               }`}
-              onClick={() => {
-                updateStoreMode('24x7');
-                toast.success('Store set to 24×7 Open Mode - Always available!');
-              }}>
+              onClick={() => handleStoreModeUpdate('24x7', 'Store set to 24×7 Open Mode - Always available!')}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
                     <div className={`w-4 h-4 rounded-full border-2 mr-3 ${
@@ -199,10 +215,7 @@ export default function AdminDashboard({ onLogout }) {
                   ? 'border-blue-500 bg-blue-50' 
                   : 'border-gray-200 hover:border-blue-300'
               }`}
-              onClick={() => {
-                updateStoreMode('normal');
-                toast.success('Store set to Normal Mode - Open 8 AM to 11 PM');
-              }}>
+              onClick={() => handleStoreModeUpdate('normal', 'Store set to Normal Mode - Open 8 AM to 11 PM')}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
                     <div className={`w-4 h-4 rounded-full border-2 mr-3 ${
@@ -227,10 +240,7 @@ export default function AdminDashboard({ onLogout }) {
                   ? 'border-red-500 bg-red-50' 
                   : 'border-gray-200 hover:border-red-300'
               }`}
-              onClick={() => {
-                updateStoreMode('closed');
-                toast.success('Store set to Completely Closed Mode');
-              }}>
+              onClick={() => handleStoreModeUpdate('closed', 'Store set to Completely Closed Mode')}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
                     <div className={`w-4 h-4 rounded-full border-2 mr-3 ${
@@ -248,6 +258,8 @@ export default function AdminDashboard({ onLogout }) {
                   {storeMode === 'closed' && <FaToggleOn className="text-red-600 text-xl" />}
                 </div>
               </div>
+                </>
+              )}
             </div>
           </div>
         </motion.div>

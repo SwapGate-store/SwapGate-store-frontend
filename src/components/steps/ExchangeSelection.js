@@ -116,7 +116,7 @@ export default function ExchangeSelection() {
           className="max-w-md mx-auto mb-8"
         >
           <Input
-            label={`Enter your ${selectedExchange?.id === 'binance' ? 'Binance User ID' : 'Exchange ID or BNB smart chain (BEP20) Address'}`}
+            label={`Enter your ${selectedExchange?.id === 'binance' ? 'Binance User ID' : 'BNB smart chain (BEP20) Address'}`}
             value={exchangeId}
             onChange={(e) => setExchangeId(e.target.value)}
             className="text-center text-black font-semibold text-lg tracking-wide"

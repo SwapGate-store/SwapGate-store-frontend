@@ -27,11 +27,41 @@ export default function AmountCalculator() {
     return (lkrValue / usdtPrice).toFixed(6);
   };
 
+  // Handle key press for LKR input - only allow numbers and decimal
+  const handleLKRKeyPress = (e) => {
+    const charCode = e.which ? e.which : e.keyCode;
+    // Allow: backspace, delete, tab, escape, enter, decimal point
+    if ([8, 9, 27, 13, 46].indexOf(charCode) !== -1 ||
+        // Allow: Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+        (charCode === 65 && e.ctrlKey === true) ||
+        (charCode === 67 && e.ctrlKey === true) ||
+        (charCode === 86 && e.ctrlKey === true) ||
+        (charCode === 88 && e.ctrlKey === true)) {
+      return;
+    }
+    // Ensure that it is a number or decimal point and stop the keypress
+    if ((charCode < 48 || charCode > 57) && charCode !== 46) {
+      e.preventDefault();
+    }
+    // Only allow one decimal point
+    if (charCode === 46 && lkrAmount.indexOf('.') !== -1) {
+      e.preventDefault();
+    }
+  };
+
   // Handle LKR input change
   const handleLKRChange = (e) => {
     const value = e.target.value;
-    setLkrAmount(value);
-    const convertedUSDT = convertLKRToUSDT(parseFloat(value));
+    
+    // Only allow numbers and decimal point
+    const numericValue = value.replace(/[^0-9.]/g, '');
+    
+    // Prevent multiple decimal points
+    const parts = numericValue.split('.');
+    const validValue = parts.length > 2 ? parts[0] + '.' + parts.slice(1).join('') : numericValue;
+    
+    setLkrAmount(validValue);
+    const convertedUSDT = convertLKRToUSDT(parseFloat(validValue));
     setUsdtAmount(convertedUSDT);
   };
 
@@ -89,6 +119,7 @@ export default function AmountCalculator() {
                 type="number"
                 value={lkrAmount}
                 onChange={handleLKRChange}
+                onKeyPress={handleLKRKeyPress}
                 className="text-center font-bold text-lg text-black"
                 error={parseFloat(lkrAmount) > 50000 ? 'One time purchase limit is 50,000 maximum' : ''}
               />

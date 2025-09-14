@@ -22,9 +22,93 @@ export default function UserInfoForm() {
   const [isDragOver, setIsDragOver] = useState(false);
   const [nicValidationError, setNicValidationError] = useState('');
   const [isNicValidated, setIsNicValidated] = useState(false);
+  const [nameValidationError, setNameValidationError] = useState('');
+  const [mobileValidationError, setMobileValidationError] = useState('');
   const fileInputRef = useRef(null);
 
+  // Name validation function
+  const validateName = (name) => {
+    if (!name.trim()) {
+      setNameValidationError('');
+      return true;
+    }
+    
+    // Allow only letters, spaces, dots, and apostrophes (for names like O'Connor, Jr.)
+    const nameRegex = /^[a-zA-Z\s.']+$/;
+    
+    if (!nameRegex.test(name)) {
+      setNameValidationError('Name can only contain letters, spaces, dots, and apostrophes');
+      return false;
+    }
+    
+    // Check for consecutive spaces or dots
+    if (/\s{2,}|\.{2,}/.test(name)) {
+      setNameValidationError('Name cannot have consecutive spaces or dots');
+      return false;
+    }
+    
+    // Check minimum length (at least 2 characters)
+    if (name.trim().length < 2) {
+      setNameValidationError('Name must be at least 2 characters long');
+      return false;
+    }
+    
+    // Check maximum length
+    if (name.trim().length > 50) {
+      setNameValidationError('Name cannot exceed 50 characters');
+      return false;
+    }
+    
+    setNameValidationError('');
+    return true;
+  };
+
+  // Mobile number validation function
+  const validateMobileNumber = (mobile) => {
+    if (!mobile.trim()) {
+      setMobileValidationError('');
+      return true;
+    }
+    
+    // Remove all spaces, dashes, and plus signs for validation
+    const cleanMobile = mobile.replace(/[\s\-\+]/g, '');
+    
+    // Sri Lankan mobile number patterns
+    // Format 1: 07XXXXXXXX (10 digits starting with 07)
+    // Format 2: 94XXXXXXXXX (11 digits starting with 94)
+    // Format 3: +94XXXXXXXXX (with country code)
+    const sriLankanMobileRegex = /^(07[0-9]{8}|94[0-9]{9})$/;
+    
+    if (!sriLankanMobileRegex.test(cleanMobile)) {
+      setMobileValidationError('Please enter a valid Sri Lankan mobile number (07XXXXXXXX or 94XXXXXXXXX)');
+      return false;
+    }
+    
+    // Additional check for valid Sri Lankan mobile prefixes
+    if (cleanMobile.startsWith('07')) {
+      const prefix = cleanMobile.substring(0, 3);
+      const validPrefixes = ['070', '071', '072', '074', '075', '076', '077', '078'];
+      if (!validPrefixes.includes(prefix)) {
+        setMobileValidationError('Please enter a valid Sri Lankan mobile number prefix');
+        return false;
+      }
+    }
+    
+    setMobileValidationError('');
+    return true;
+  };
+
   const handleInputChange = (field, value) => {
+    // Validate name field
+    if (field === 'name') {
+      validateName(value);
+    }
+    
+    // Validate mobile number field
+    if (field === 'mobileNumber') {
+      validateMobileNumber(value);
+    }
+    
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -280,6 +364,13 @@ export default function UserInfoForm() {
       toast.error('Please enter your name');
       return;
     }
+    
+    // Validate name format
+    if (!validateName(formData.name)) {
+      toast.error('Please enter a valid name (letters only)');
+      return;
+    }
+    
     if (!formData.nicNumber.trim()) {
       toast.error('Please enter your NIC number');
       return;
@@ -296,6 +387,13 @@ export default function UserInfoForm() {
       toast.error('Please enter your mobile number');
       return;
     }
+    
+    // Validate mobile number format
+    if (!validateMobileNumber(formData.mobileNumber)) {
+      toast.error('Please enter a valid Sri Lankan mobile number');
+      return;
+    }
+    
     if (!uploadedFile) {
       toast.error('Please upload your bank receipt');
       return;
@@ -351,6 +449,12 @@ export default function UserInfoForm() {
                   placeholder="Enter your full name"
                   className="text-gray-800"
                 />
+                {nameValidationError && (
+                  <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-lg flex items-start">
+                    <FaExclamationTriangle className="text-red-500 mr-2 mt-0.5 flex-shrink-0" size={14} />
+                    <p className="text-sm text-red-600">{nameValidationError}</p>
+                  </div>
+                )}
               </div>
 
               {/* ID Verification Section */}
@@ -646,6 +750,12 @@ export default function UserInfoForm() {
                   placeholder="Enter your mobile number"
                   className="text-gray-800"
                 />
+                {mobileValidationError && (
+                  <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-lg flex items-start">
+                    <FaExclamationTriangle className="text-red-500 mr-2 mt-0.5 flex-shrink-0" size={14} />
+                    <p className="text-xs text-red-600">{mobileValidationError}</p>
+                  </div>
+                )}
                 <p className="text-sm text-gray-500 mt-2">
                   We&apos;ll contact you via WhatsApp or Telegram on this number
                 </p>

@@ -31,7 +31,7 @@ export default function ThankYouPage() {
       name: 'Telegram',
       icon: FaTelegramPlane,
       color: 'bg-blue-400 hover:bg-blue-500',
-      href: 'https://t.me/+94705103537'
+      href: 'http://t.me/Swap_owner'
     }
   ];
 

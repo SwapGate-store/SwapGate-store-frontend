@@ -2,6 +2,8 @@ import { Geist, Geist_Mono, Pacifico, Poppins } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
 import { USDTProvider } from "@/context/USDTContext";
+import { StoreSettingsProvider } from "@/context/StoreSettingsContext";
+import StoreStatusBadge from "@/components/ui/StoreStatusBadge";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -49,9 +51,12 @@ export default function RootLayout({ children }) {
         className={`${geistSans.variable} ${geistMono.variable} ${pacifico.variable} ${poppins.variable} antialiased font-poppins`}
       >
         <USDTProvider>
-          <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
-            {children}
-          </div>
+          <StoreSettingsProvider>
+            <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
+              {children}
+              <StoreStatusBadge />
+            </div>
+          </StoreSettingsProvider>
         </USDTProvider>
         <Toaster 
           position="top-right"

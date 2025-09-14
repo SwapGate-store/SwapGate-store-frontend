@@ -2,16 +2,27 @@
 
 import { motion } from 'framer-motion';
 import { useExchange } from '@/context/ExchangeContext';
+import { useStoreSettings } from '@/context/StoreSettingsContext';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Button from '../ui/Button';
+import { FaLock } from 'react-icons/fa';
 
 export default function WelcomePage() {
   const { nextStep } = useExchange();
+  const { getStoreStatus } = useStoreSettings();
   const router = useRouter();
+  
+  const storeStatus = getStoreStatus();
 
   const handleLogoClick = () => {
     router.push('/admin');
+  };
+
+  const handleNext = () => {
+    if (storeStatus.isOpen) {
+      nextStep();
+    }
   };
 
   return (
@@ -70,10 +81,44 @@ export default function WelcomePage() {
               scale: 1.02,
               color: "#ffffff"
             }}
-            className="text-xl md:text-2xl text-blue-100 mb-12 font-light cursor-default"
+            className="text-xl md:text-2xl text-blue-100 mb-8 font-light cursor-default"
           >
             Your Secure USDT/LKR Exchange
           </motion.p>
+
+          {/* Store Status Display */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.8 }}
+            className="mb-8"
+          >
+            {!storeStatus.isOpen ? (
+              /* Closed Sign */
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ 
+                  duration: 0.5, 
+                  delay: 1,
+                  type: "spring",
+                  stiffness: 200
+                }}
+                className="bg-red-600 text-white px-8 py-4 rounded-lg mx-auto inline-block border-4 border-red-500 shadow-2xl"
+              >
+                <div className="flex items-center justify-center space-x-3">
+                  <FaLock className="text-2xl" />
+                  <div className="text-center">
+                    <div className="text-2xl font-bold">CLOSED</div>
+                    <div className="text-sm opacity-90">{storeStatus.statusMessage}</div>
+                  </div>
+                </div>
+              </motion.div>
+            ) : (
+              /* Open Status - No display needed */
+              null
+            )}
+          </motion.div>
 
           {/* CTA Button */}
           <motion.div
@@ -81,49 +126,60 @@ export default function WelcomePage() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ 
               duration: 0.8, 
-              delay: 1,
+              delay: 1.3,
               type: "spring",
               stiffness: 150
             }}
           >
-            
             <motion.button
-              onClick={nextStep}
+              onClick={handleNext}
+              disabled={!storeStatus.isOpen}
               style={{ 
-                backgroundColor: '#ffffff', 
-                color: '#1e3a8a', 
+                backgroundColor: storeStatus.isOpen ? '#ffffff' : '#6b7280', 
+                color: storeStatus.isOpen ? '#1e3a8a' : '#9ca3af', 
                 fontWeight: '600',
                 padding: '12px 32px',
                 borderRadius: '25px',
                 border: 'none',
                 fontSize: '18px',
-                cursor: 'pointer',
-                boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
+                cursor: storeStatus.isOpen ? 'pointer' : 'not-allowed',
+                boxShadow: storeStatus.isOpen ? '0 10px 25px rgba(0,0,0,0.2)' : '0 5px 15px rgba(0,0,0,0.1)',
+                opacity: storeStatus.isOpen ? 1 : 0.6
               }}
-              className=""
-              whileHover={{ 
+              whileHover={storeStatus.isOpen ? { 
                 scale: 1.1,
                 backgroundColor: '#f0f9ff',
                 boxShadow: '0 15px 35px rgba(0,0,0,0.3)',
                 rotateZ: 2,
                 transition: { duration: 0.2 }
-              }}
-              whileTap={{ 
+              } : {}}
+              whileTap={storeStatus.isOpen ? { 
                 scale: 0.95,
                 rotateZ: -2
-              }}
+              } : {}}
               initial={{ rotateZ: 0 }}
             >
               <motion.span
-                whileHover={{
+                whileHover={storeStatus.isOpen ? {
                   x: 5,
                   transition: { duration: 0.2 }
-                }}
+                } : {}}
                 style={{ display: 'inline-block' }}
               >
-                Next →
+                {storeStatus.isOpen ? 'Start Exchange →' : 'Store Closed'}
               </motion.span>
             </motion.button>
+            
+            {!storeStatus.isOpen && (
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.5 }}
+                className="text-blue-200 text-sm mt-4"
+              >
+                Please visit us during store hours: 8:00 AM - 11:00 PM
+              </motion.p>
+            )}
           </motion.div>
         </div>
       </div>

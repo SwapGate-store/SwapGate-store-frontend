@@ -141,9 +141,7 @@ export default function AmountCalculator() {
           {/* Exchange Rate Display */}
           <div className="text-center mt-6">
             <div className="bg-gray-100 rounded-lg p-4">
-              <p className="text-sm text-gray-600 mb-1">Current Exchange Rate</p>
-              <p className="text-lg font-bold text-blue-600">{getCurrentRate()}</p>
-            </div>
+             </div>
           </div>
         </Card>
 

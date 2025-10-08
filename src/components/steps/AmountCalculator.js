@@ -107,7 +107,7 @@ export default function AmountCalculator() {
             Convert LKR to USDT with dynamic pricing
             (USDT මිලදී ගැනීමට අවශ්‍ය රුපියල් ප්‍රමානය ඇතුලත් කරන්න )
           </p>
-          <p className="text-lg text-red-600"> <b>MEXC</b> හා <b>ByBit</b> සඳහා Deposit කලහැකි අවමය 10USDT වේ.ඊට අඩූ ගනුදෙනු සිදු නොකරනු ලැබේ</p>
+          <p className="text-lg text-red-600"> <b>MEXC</b> හා <b>ByBit</b> සඳහා Deposit කලහැකි අවමය 10 USDT වේ.</p>
         </div>
 
         {/* Converter */}

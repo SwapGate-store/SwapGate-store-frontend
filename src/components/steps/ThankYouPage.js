@@ -39,9 +39,7 @@ export default function ThankYouPage() {
           transition={{ type: "spring", stiffness: 200, damping: 20 }}
           className="text-center mb-8"
         >
-          <div className="inline-flex items-center justify-center w-24 h-24 bg-green-500 rounded-full mb-6">
-            <FaCheckCircle className="text-white" size={48} />
-          </div>
+          
         </motion.div>
 
         {/* Thank You Title */}

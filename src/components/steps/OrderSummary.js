@@ -2,11 +2,11 @@
 
 import { motion } from 'framer-motion';
 import { useExchange } from '@/context/ExchangeContext';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
-import { FaExchangeAlt, FaUniversity, FaUser, FaFileImage, FaCheckCircle, FaSpinner, FaClock } from 'react-icons/fa';
+import { FaExchangeAlt, FaUniversity, FaUser, FaFileImage, FaCheckCircle, FaSpinner, FaClock, FaExclamationTriangle, FaSync } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
@@ -16,7 +16,41 @@ export default function OrderSummary() {
   const { nextStep, prevStep, exchangeData } = useExchange();
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showProcessingModal, setShowProcessingModal] = useState(false);
+  const [isTransferComplete, setIsTransferComplete] = useState(false);
   const invoiceRef = useRef(null);
+
+  // Handle processing modal and prevent browser closing
+  useEffect(() => {
+    if (!showProcessingModal) return;
+
+    const handleBeforeUnload = (e) => {
+      e.preventDefault();
+      e.returnValue = '';
+      return '';
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    // Auto-advance to thank you page after processing completes
+    if (isTransferComplete) {
+      const timer = setTimeout(() => {
+        window.removeEventListener('beforeunload', handleBeforeUnload);
+        setShowProcessingModal(false);
+        setIsTransferComplete(false);
+        nextStep();
+      }, 3000);
+
+      return () => {
+        clearTimeout(timer);
+        window.removeEventListener('beforeunload', handleBeforeUnload);
+      };
+    }
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [showProcessingModal, isTransferComplete, nextStep]);
 
   // Helper function to wrap long text in PDF
   const wrapText = (pdf, text, x, y, maxWidth, lineHeight = 8) => {
@@ -423,6 +457,9 @@ export default function OrderSummary() {
       return;
     }
 
+    // Show the processing modal first
+    setShowProcessingModal(true);
+    setIsTransferComplete(false);
     setIsProcessing(true);
     
     // Show processing toast notification
@@ -447,6 +484,7 @@ export default function OrderSummary() {
       // Check if bank receipt exists
       if (!exchangeData.bankReceipt) {
         toast.error('Bank receipt is required to complete the order');
+        setShowProcessingModal(false);
         return;
       }
 
@@ -498,7 +536,9 @@ export default function OrderSummary() {
       } catch (err) {
         console.warn('Render server wakeup API failed:', err);
       }
-      nextStep(); // Always go to thank you page
+      
+      // Mark transfer as complete - this will trigger the auto-close and navigation
+      setIsTransferComplete(true);
     } catch (error) {
       console.error('Error in checkout process:', error);
       
@@ -511,6 +551,9 @@ export default function OrderSummary() {
       } else {
         toast.error(`Order processing error: ${error.message}. Please try again or contact support.`);
       }
+      
+      // Close modal on error
+      setShowProcessingModal(false);
     } finally {
       // Dismiss the processing toast
       toast.dismiss(processingToast);
@@ -800,6 +843,125 @@ export default function OrderSummary() {
           </Button>
         </div>
       </div>
+
+      {/* Processing Modal - Prevents Browser Closing */}
+      {showProcessingModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-2xl max-w-xl mx-auto shadow-2xl overflow-hidden"
+          >
+            {/* Header Background - Blue Green Gradient */}
+            <div className="bg-gradient-to-r from-blue-600 to-green-600 p-8 text-center">
+              <motion.div
+                animate={{ rotate: isTransferComplete ? 0 : 360 }}
+                transition={{ duration: isTransferComplete ? 0 : 2, repeat: isTransferComplete ? 0 : Infinity, ease: "linear" }}
+                className="flex justify-center mb-4"
+              >
+                {isTransferComplete ? (
+                  <div className="inline-flex items-center justify-center w-16 h-16 bg-white bg-opacity-20 rounded-full">
+                    <FaCheckCircle className="text-white" size={40} />
+                  </div>
+                ) : (
+                  <div className="inline-flex items-center justify-center w-16 h-16 bg-white bg-opacity-20 rounded-full">
+                    <FaSync className="text-white animate-spin" size={40} />
+                  </div>
+                )}
+              </motion.div>
+
+              {isTransferComplete ? (
+                <>
+                  <h1 className="text-3xl font-bold text-white mb-2">Transfer Complete!</h1>
+                  <p className="text-blue-100">Your order has been processed successfully</p>
+                </>
+              ) : (
+                <>
+                  <h1 className="text-3xl font-bold text-white mb-2">Processing Order</h1>
+                  <p className="text-blue-100">Please keep this window open</p>
+                </>
+              )}
+            </div>
+
+            {/* Content */}
+            <div className="p-8">
+              {!isTransferComplete ? (
+                <>
+                  {/* Warning Message */}
+                  <div className="bg-blue-50 border-l-4 border-blue-600 rounded-lg p-6 mb-8">
+                    <p className="text-gray-700 leading-relaxed">
+                      <span className="font-bold text-blue-600">⚠️ Important:</span> Do not close this browser window or leave this page. Closing now will interrupt the transfer and your documents may not be processed correctly.
+                    </p>
+                  </div>
+
+                  {/* Processing Steps */}
+                  <div className="space-y-3 mb-8">
+                    <div className="flex items-start space-x-4 pb-4 border-b border-gray-200">
+                      <div className="flex-shrink-0">
+                        <div className="flex items-center justify-center h-10 w-10 rounded-full bg-green-100">
+                          <FaCheckCircle className="text-green-600" size={20} />
+                        </div>
+                      </div>
+                      <div className="flex-grow">
+                        <p className="text-gray-800 font-medium">Order verified</p>
+                        <p className="text-gray-500 text-sm">Your details have been validated</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start space-x-4 pb-4 border-b border-gray-200">
+                      <div className="flex-shrink-0">
+                        <div className="flex items-center justify-center h-10 w-10 rounded-full bg-blue-100">
+                          <FaSync className="text-blue-600 animate-spin" size={20} />
+                        </div>
+                      </div>
+                      <div className="flex-grow">
+                        <p className="text-gray-800 font-medium">Processing transfer</p>
+                        <p className="text-gray-500 text-sm">Sending documents to server...</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start space-x-4">
+                      <div className="flex-shrink-0">
+                        <div className="flex items-center justify-center h-10 w-10 rounded-full bg-gray-100">
+                          <FaClock className="text-gray-400" size={20} />
+                        </div>
+                      </div>
+                      <div className="flex-grow">
+                        <p className="text-gray-600 font-medium">Finalizing order</p>
+                        <p className="text-gray-500 text-sm">Almost done...</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Info Box */}
+                  <div className="bg-gradient-to-r from-blue-50 to-green-50 rounded-lg p-4 text-center">
+                    <p className="text-gray-600 text-sm">
+                      <span className="font-semibold">Typical time:</span> 2-3 minutes
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* Success Message */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    className="text-center space-y-4"
+                  >
+                    <p className="text-gray-800 text-lg leading-relaxed">
+                      Your order has been successfully processed and submitted. You will receive a confirmation email shortly.
+                    </p>
+                    <p className="text-gray-600 text-sm">
+                      Redirecting to confirmation page in a moment...
+                    </p>
+                  </motion.div>
+                </>
+              )}
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

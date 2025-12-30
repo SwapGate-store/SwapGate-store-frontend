@@ -22,7 +22,7 @@ export default function BankSelection() {
       accountName: 'T D Hathurusingha',
       branch: 'Kottawa'
     },
-    {
+    /*{
       id: 'commercial',
       name: 'Commercial Bank',
       logo: '/assets/commercial.png',
@@ -45,7 +45,7 @@ export default function BankSelection() {
       accountNumber: '102002675231',
       accountName: 'T D Hathurusingha',
       branch: 'Kottawa'
-    }
+    }*/
   ];
 
   const selectBank = (bank) => {

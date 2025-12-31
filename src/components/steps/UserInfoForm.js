@@ -716,6 +716,7 @@ export default function UserInfoForm() {
                 )}
 
                 {/* Validate Button */}
+                <h3 className='text-red-500'>නිවැරදි දත්ත ඇතුලත් කල පසු පහත ඇති Button එක Click කරන්න </h3>
                 <button
                   onClick={handleValidateNIC}
                   disabled={!formData.nicNumber.trim() || !formData.gender || !formData.dateOfBirth}

@@ -84,10 +84,14 @@ export default function BankSelection() {
           <p className="text-base text-gray-600">
             Choose the bank where you&apos;ll make the payment
           </p>
+          <p className="text-base text-red-600">
+           පහතින් ඇති බැංකුව Select කර නැත්නම් Select කරන්න 
+          </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 gap-4 mb-6">
-          {banks.map((bank, index) => (
+        <div className="flex justify-center mb-6">
+          <div className="w-full max-w-sm">
+            {banks.map((bank, index) => (
             <motion.div
               key={bank.id}
               initial={{ opacity: 0, y: 20 }}
@@ -172,6 +176,7 @@ export default function BankSelection() {
               </Card>
             </motion.div>
           ))}
+          </div>
         </div>        <div className="flex justify-between items-center">
           <Button variant="secondary" onClick={prevStep}>
             ← Back

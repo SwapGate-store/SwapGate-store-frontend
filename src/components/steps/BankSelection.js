@@ -85,7 +85,7 @@ export default function BankSelection() {
             Choose the bank where you&apos;ll make the payment
           </p>
           <p className="text-base text-red-600">
-           පහතින් ඇති බැංකුව Select කර නැත්නම් Select කර  Next Button එක කරන්න
+           පහතින් ඇති බැංකුව Select කර Next Button එක කරන්න
           </p>
         </motion.div>
 

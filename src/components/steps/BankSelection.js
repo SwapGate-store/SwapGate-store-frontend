@@ -85,7 +85,7 @@ export default function BankSelection() {
             Choose the bank where you&apos;ll make the payment
           </p>
           <p className="text-base text-red-600">
-           පහතින් ඇති බැංකුව Select කර Next Button එක Click කරන්න
+           මෙහි තිබෙන bank details copy කරගෙන payment  එක සිදු කර පහත bank details එක උඩ click  කර next  button එක click  කරන්න (ඉදිරියේදී  රිසිට්  එක upload  කිරීමට ස්ථානයක් ඇත.)
           </p>
         </motion.div>
 

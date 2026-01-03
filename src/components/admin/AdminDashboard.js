@@ -215,7 +215,7 @@ export default function AdminDashboard({ onLogout }) {
                   ? 'border-blue-500 bg-blue-50' 
                   : 'border-gray-200 hover:border-blue-300'
               }`}
-              onClick={() => handleStoreModeUpdate('normal', 'Store set to Normal Mode - Open 8 AM to 11 PM')}>
+              onClick={() => handleStoreModeUpdate('normal', 'Store set to Normal Mode - Open 9 AM to 11 PM')}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
                     <div className={`w-4 h-4 rounded-full border-2 mr-3 ${
@@ -227,7 +227,7 @@ export default function AdminDashboard({ onLogout }) {
                     </div>
                     <div>
                       <h4 className="font-medium text-gray-900">Normal Mode</h4>
-                      <p className="text-sm text-gray-600">Open 8 AM - 11 PM</p>
+                      <p className="text-sm text-gray-600">Open 9 AM - 11 PM</p>
                     </div>
                   </div>
                   {storeMode === 'normal' && <FaToggleOn className="text-blue-600 text-xl" />}

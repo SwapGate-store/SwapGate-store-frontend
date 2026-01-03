@@ -28,7 +28,7 @@ export const StoreSettingsProvider = ({ children }) => {
       case 'normal':
         const now = new Date();
         const currentHour = now.getHours();
-        // Store open from 8 AM (8) to 11 PM (23)
+        // Store open from 9 AM (9) to 11 PM (23)
         return currentHour >= 8 && currentHour < 23;
       default:
         return false;
@@ -54,7 +54,7 @@ export const StoreSettingsProvider = ({ children }) => {
         break;
       case 'normal':
         if (isOpen) {
-          statusMessage = 'Open (8 AM - 11 PM)';
+          statusMessage = 'Open (9 AM - 11 PM)';
           badgeColor = 'bg-green-500';
         } else {
           statusMessage = 'Closed';
@@ -111,7 +111,7 @@ export const StoreSettingsProvider = ({ children }) => {
       case '24x7':
         return '24×7 Open Mode';
       case 'normal':
-        return 'Normal Mode (8 AM - 11 PM)';
+        return 'Normal Mode (9 AM - 11 PM)';
       case 'closed':
         return 'Completely Closed Mode';
       default:

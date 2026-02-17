@@ -2,6 +2,7 @@
 
 import { useExchange } from '@/context/ExchangeContext';
 import WelcomePage from './steps/WelcomePage';
+import BuyOrSellPage from './steps/BuyOrSellPage';
 import ExchangeSelection from './steps/ExchangeSelection';
 import AmountCalculator from './steps/AmountCalculator';
 import BankSelection from './steps/BankSelection';
@@ -17,16 +18,18 @@ export default function ExchangeFlow() {
       case 0:
         return <WelcomePage />;
       case 1:
-        return <ExchangeSelection />;
+        return <BuyOrSellPage />;
       case 2:
-        return <AmountCalculator />;
+        return <ExchangeSelection />;
       case 3:
-        return <BankSelection />;
+        return <AmountCalculator />;
       case 4:
-        return <UserInfoForm />;
+        return <BankSelection />;
       case 5:
-        return <OrderSummary />;
+        return <UserInfoForm />;
       case 6:
+        return <OrderSummary />;
+      case 7:
         return <ThankYouPage />;
       default:
         return <WelcomePage />;

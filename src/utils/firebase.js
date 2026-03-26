@@ -175,3 +175,67 @@ export function subscribeToStoreMode(callback) {
     callback('normal'); // fallback
   });
 }
+
+// ============================================
+// One-Time Purchase Limit Functions (LKR Currency)
+// ============================================
+
+// Get one-time purchase limit in LKR from Firebase
+export async function getOnetimePurchaseLimit() {
+  try {
+    const docRef = doc(db, 'admin', 'storeSettings');
+    const docSnap = await getDoc(docRef);
+    
+    if (docSnap.exists() && docSnap.data().maxPurchaseLimitLKR !== undefined) {
+      return docSnap.data().maxPurchaseLimitLKR;
+    } else {
+      // Default limit if not set: 5,000,000 LKR
+      return 5000000;
+    }
+  } catch (error) {
+    console.error('Error fetching one-time purchase limit:', error);
+    return 5000000; // fallback limit
+  }
+}
+
+// Update one-time purchase limit in LKR in Firebase (admin function)
+export async function updateOnetimePurchaseLimit(limitLKR) {
+  try {
+    const docRef = doc(db, 'admin', 'storeSettings');
+    const currentDoc = await getDoc(docRef);
+    
+    // Preserve existing data and update the limit
+    const existingData = currentDoc.exists() ? currentDoc.data() : {};
+    
+    await setDoc(docRef, {
+      ...existingData,
+      maxPurchaseLimitLKR: parseFloat(limitLKR),
+      maxPurchaseLimitUpdatedAt: serverTimestamp(),
+      maxPurchaseLimitUpdatedBy: 'admin'
+    });
+    
+    console.log('One-time purchase limit (LKR) updated to:', limitLKR);
+    return true;
+  } catch (error) {
+    console.error('Error updating one-time purchase limit:', error);
+    return false;
+  }
+}
+
+// Subscribe to one-time purchase limit changes (real-time updates)
+export function subscribeToOnetimePurchaseLimit(callback) {
+  const docRef = doc(db, 'admin', 'storeSettings');
+  
+  return onSnapshot(docRef, (docSnap) => {
+    if (docSnap.exists() && docSnap.data().maxPurchaseLimitLKR !== undefined) {
+      const limit = docSnap.data().maxPurchaseLimitLKR;
+      callback(limit);
+    } else {
+      // Initialize with default limit if not set: 5,000,000 LKR
+      callback(5000000);
+    }
+  }, (error) => {
+    console.error('Error listening to purchase limit changes:', error);
+    callback(5000000); // fallback
+  });
+}

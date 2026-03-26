@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useExchange } from '@/context/ExchangeContext';
 import { useUSDT } from '@/context/USDTContext';
+import { useStoreSettings } from '@/context/StoreSettingsContext';
 import { getUSDTPrice } from '@/utils/firebase';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
@@ -12,6 +13,7 @@ import Card from '../ui/Card';
 export default function AmountCalculator() {
   const { nextStep, prevStep, updateExchangeData, exchangeData } = useExchange();
   const { availableUSDT, getPriceForAmount, isLoading } = useUSDT();
+  const { onetimePurchaseLimit } = useStoreSettings();
   const [lkrAmount, setLkrAmount] = useState('');
   const [usdtAmount, setUsdtAmount] = useState('');
 
@@ -70,7 +72,7 @@ export default function AmountCalculator() {
     const usdtValue = parseFloat(usdtAmount);
     const lkrValue = parseFloat(lkrAmount);
     
-    if (usdtValue > 0 && lkrValue > 0 && lkrValue <= 50000 && usdtValue <= availableUSDT) {
+    if (usdtValue > 0 && lkrValue > 0 && lkrValue <= onetimePurchaseLimit && usdtValue <= availableUSDT) {
       updateExchangeData({
         lkrAmount: lkrValue,
         usdtAmount: usdtValue,
@@ -122,7 +124,7 @@ export default function AmountCalculator() {
                 onChange={handleLKRChange}
                 onKeyPress={handleLKRKeyPress}
                 className="text-center font-bold text-lg text-black"
-                error={parseFloat(lkrAmount) > 50000 ? 'One time purchase limit is 50,000 maximum' : ''}
+                error={parseFloat(lkrAmount) > onetimePurchaseLimit ? `One time purchase limit is ${onetimePurchaseLimit.toLocaleString()} LKR maximum` : ''}
               />
             </div>
 

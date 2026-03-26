@@ -1,7 +1,14 @@
 'use client'
 
 import { createContext, useContext, useState, useEffect } from 'react';
-import { getStoreMode, updateStoreMode as updateStoreModeFirebase, subscribeToStoreMode } from '@/utils/firebase';
+import { 
+  getStoreMode, 
+  updateStoreMode as updateStoreModeFirebase, 
+  subscribeToStoreMode,
+  getOnetimePurchaseLimit,
+  updateOnetimePurchaseLimit as updateOnetimePurchaseLimitFirebase,
+  subscribeToOnetimePurchaseLimit
+} from '@/utils/firebase';
 
 const StoreSettingsContext = createContext();
 
@@ -16,6 +23,7 @@ export const useStoreSettings = () => {
 export const StoreSettingsProvider = ({ children }) => {
   // Store operation modes: '24x7', 'normal', 'closed'
   const [storeMode, setStoreMode] = useState('normal');
+  const [onetimePurchaseLimit, setOnetimePurchaseLimit] = useState(5000000); // 5,000,000 LKR default
   const [isLoading, setIsLoading] = useState(true);
   
   // Check if store is currently open based on the selected mode
@@ -105,6 +113,30 @@ export const StoreSettingsProvider = ({ children }) => {
     }
   };
 
+  // Admin function to update one-time purchase limit
+  const updateOnetimePurchaseLimit = async (limit) => {
+    try {
+      const success = await updateOnetimePurchaseLimitFirebase(limit);
+      if (success) {
+        // The real-time listener will update the state
+        console.log('One-time purchase limit update sent to Firebase');
+        return true;
+      } else {
+        console.error('Failed to update purchase limit in Firebase');
+        // Keep localStorage as fallback
+        localStorage.setItem('onetimePurchaseLimitLKR', limit);
+        setOnetimePurchaseLimit(parseFloat(limit));
+        return false;
+      }
+    } catch (error) {
+      console.error('Error updating purchase limit:', error);
+      // Keep localStorage as fallback
+      localStorage.setItem('onetimePurchaseLimitLKR', limit);
+      setOnetimePurchaseLimit(parseFloat(limit));
+      return false;
+    }
+  };
+
   // Get display name for store mode
   const getStoreModeDisplay = (mode = storeMode) => {
     switch (mode) {
@@ -121,7 +153,8 @@ export const StoreSettingsProvider = ({ children }) => {
 
   // Load settings from Firebase on mount and subscribe to changes
   useEffect(() => {
-    let unsubscribe = null;
+    let unsubscribeModeChanges = null;
+    let unsubscribeLimitChanges = null;
     
     const initializeStoreSettings = async () => {
       try {
@@ -129,11 +162,22 @@ export const StoreSettingsProvider = ({ children }) => {
         const mode = await getStoreMode();
         setStoreMode(mode);
         
-        // Then subscribe to real-time updates
-        unsubscribe = subscribeToStoreMode((newMode) => {
+        // Get the one-time purchase limit from Firebase
+        const limit = await getOnetimePurchaseLimit();
+        setOnetimePurchaseLimit(limit);
+        
+        // Subscribe to real-time mode updates
+        unsubscribeModeChanges = subscribeToStoreMode((newMode) => {
           setStoreMode(newMode);
           // Also update localStorage as backup
           localStorage.setItem('storeMode', newMode);
+        });
+
+        // Subscribe to real-time purchase limit updates
+        unsubscribeLimitChanges = subscribeToOnetimePurchaseLimit((newLimit) => {
+          setOnetimePurchaseLimit(newLimit);
+          // Also update localStorage as backup
+          localStorage.setItem('onetimePurchaseLimitLKR', newLimit);
         });
         
       } catch (error) {
@@ -144,6 +188,11 @@ export const StoreSettingsProvider = ({ children }) => {
         if (savedMode && ['24x7', 'normal', 'closed'].includes(savedMode)) {
           setStoreMode(savedMode);
         }
+
+        const savedLimit = localStorage.getItem('onetimePurchaseLimitLKR');
+        if (savedLimit) {
+          setOnetimePurchaseLimit(parseFloat(savedLimit));
+        }
       } finally {
         setIsLoading(false);
       }
@@ -151,10 +200,13 @@ export const StoreSettingsProvider = ({ children }) => {
 
     initializeStoreSettings();
 
-    // Cleanup subscription on unmount
+    // Cleanup subscriptions on unmount
     return () => {
-      if (unsubscribe) {
-        unsubscribe();
+      if (unsubscribeModeChanges) {
+        unsubscribeModeChanges();
+      }
+      if (unsubscribeLimitChanges) {
+        unsubscribeLimitChanges();
       }
     };
   }, []);
@@ -162,6 +214,8 @@ export const StoreSettingsProvider = ({ children }) => {
   const value = {
     storeMode,
     updateStoreMode,
+    onetimePurchaseLimit,
+    updateOnetimePurchaseLimit,
     isStoreOpen: isStoreOpen(),
     getStoreStatus,
     getStoreModeDisplay,

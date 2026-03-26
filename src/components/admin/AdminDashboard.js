@@ -24,17 +24,21 @@ export default function AdminDashboard({ onLogout }) {
     isStoreOpen,
     getStoreStatus,
     getStoreModeDisplay,
+    onetimePurchaseLimit,
+    updateOnetimePurchaseLimit,
     isLoading: storeSettingsLoading
   } = useStoreSettings();
 
   const [formData, setFormData] = useState({
     availableUSDT: 0,
-    priceRanges: []
+    priceRanges: [],
+    onetimePurchaseLimit: 50000
   });
   const [savingStates, setSavingStates] = useState({
     usdtAmount: false,
     priceRanges: false,
-    storeHours: false
+    storeHours: false,
+    purchaseLimit: false
   });
 
   const storeStatus = getStoreStatus();
@@ -55,10 +59,11 @@ export default function AdminDashboard({ onLogout }) {
     if (!isLoading) {
       setFormData({
         availableUSDT: availableUSDT,
-        priceRanges: priceRanges.map(range => ({ ...range }))
+        priceRanges: priceRanges.map(range => ({ ...range })),
+        onetimePurchaseLimit: onetimePurchaseLimit
       });
     }
-  }, [availableUSDT, priceRanges, isLoading]);
+  }, [availableUSDT, priceRanges, isLoading, onetimePurchaseLimit]);
 
   const handleUSDTAmountChange = (value) => {
     setFormData(prev => ({
@@ -100,6 +105,30 @@ export default function AdminDashboard({ onLogout }) {
     } finally {
       setSavingStates(prev => ({ ...prev, priceRanges: false }));
     }
+  };
+
+  const savePurchaseLimit = async () => {
+    try {
+      setSavingStates(prev => ({ ...prev, purchaseLimit: true }));
+      const success = await updateOnetimePurchaseLimit(formData.onetimePurchaseLimit);
+      if (success) {
+        toast.success('One-time purchase limit updated successfully!');
+      } else {
+        toast.error('Failed to update purchase limit');
+      }
+    } catch (error) {
+      console.error('Error updating purchase limit:', error);
+      toast.error('Failed to update purchase limit');
+    } finally {
+      setSavingStates(prev => ({ ...prev, purchaseLimit: false }));
+    }
+  };
+
+  const handlePurchaseLimitChange = (value) => {
+    setFormData(prev => ({
+      ...prev,
+      onetimePurchaseLimit: parseFloat(value) || 0
+    }));
   };
 
   if (isLoading) {
@@ -308,6 +337,56 @@ export default function AdminDashboard({ onLogout }) {
                 <div className="flex items-center justify-center">
                   <FaDollarSign className="mr-2" />
                   Save USDT Amount
+                </div>
+              )}
+            </Button>
+          </div>
+        </motion.div>
+
+        {/* One-Time Purchase Limit Management */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="bg-white rounded-lg shadow-sm p-6 mb-8"
+        >
+          <div className="flex items-center mb-6">
+            <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center mr-3">
+              <FaDollarSign className="w-5 h-5 text-orange-600" />
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900">One-Time Purchase Limit (LKR)</h2>
+              <p className="text-sm text-gray-600 mt-1">Set the maximum LKR amount customers can purchase in a single transaction</p>
+            </div>
+          </div>
+          
+          <div className="max-w-md">
+            <Input
+              label={`Maximum Per Transaction (Current: ${onetimePurchaseLimit.toLocaleString()} LKR)`}
+              type="number"
+              value={formData.onetimePurchaseLimit}
+              onChange={(e) => handlePurchaseLimitChange(e.target.value)}
+              placeholder="Enter maximum purchase limit in LKR"
+              className="mb-4"
+            />
+            <Button 
+              onClick={savePurchaseLimit}
+              disabled={savingStates.purchaseLimit || formData.onetimePurchaseLimit === onetimePurchaseLimit}
+              className={`w-full ${
+                formData.onetimePurchaseLimit !== onetimePurchaseLimit 
+                  ? 'bg-orange-600 hover:bg-orange-700' 
+                  : 'bg-gray-400'
+              }`}
+            >
+              {savingStates.purchaseLimit ? (
+                <div className="flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Saving...
+                </div>
+              ) : (
+                <div className="flex items-center justify-center">
+                  <FaDollarSign className="mr-2" />
+                  Save Purchase Limit
                 </div>
               )}
             </Button>

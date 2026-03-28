@@ -439,7 +439,7 @@ export default function UserInfoForm() {
                 <FaUser className="text-blue-600 mr-3" size={24} />
                 <h2 className="text-xl font-semibold text-gray-800">Personal Information</h2>
               </div>
-              
+              <h2>Bank details  සහ මෙතන fill කරන details  සමාන විය යුතුය .නැතහොත් ඔයට usdt නොලැබෙනු ඇත</h2>
               {/* Name Input */}
               <div className="mb-6">
                 <Input

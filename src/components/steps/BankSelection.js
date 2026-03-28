@@ -14,7 +14,7 @@ export default function BankSelection() {
   const [selectedBank, setSelectedBank] = useState(null);
 
   const banks = [
-    {
+    /*{
       id: 'hnb',
       name: 'HNB Bank',
       logo: '/assets/HNB.png',
@@ -22,7 +22,7 @@ export default function BankSelection() {
       accountName: 'T D Hathurusingha',
       branch: 'Kottawa'
     },
-    /*{
+    {
       id: 'commercial',
       name: 'Commercial Bank',
       logo: '/assets/commercial.png',
@@ -37,7 +37,7 @@ export default function BankSelection() {
       accountNumber: '105255196555',
       accountName: 'T D Hathurusingha',
       branch: 'Kottawa'
-    },
+    },*/
     {
       id: 'dfcc',
       name: 'DFCC Bank',
@@ -45,7 +45,7 @@ export default function BankSelection() {
       accountNumber: '102002675231',
       accountName: 'T D Hathurusingha',
       branch: 'Kottawa'
-    }*/
+    }
   ];
 
   const selectBank = (bank) => {

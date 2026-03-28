@@ -72,7 +72,7 @@ export default function AmountCalculator() {
     const usdtValue = parseFloat(usdtAmount);
     const lkrValue = parseFloat(lkrAmount);
     
-    if (usdtValue > 0 && lkrValue > 0 && lkrValue <= onetimePurchaseLimit && usdtValue <= availableUSDT) {
+    if (lkrValue >= 1000 && lkrValue <= onetimePurchaseLimit && usdtValue > 0 && usdtValue <= availableUSDT) {
       updateExchangeData({
         lkrAmount: lkrValue,
         usdtAmount: usdtValue,
@@ -124,7 +124,13 @@ export default function AmountCalculator() {
                 onChange={handleLKRChange}
                 onKeyPress={handleLKRKeyPress}
                 className="text-center font-bold text-lg text-black"
-                error={parseFloat(lkrAmount) > onetimePurchaseLimit ? `One time purchase limit is ${onetimePurchaseLimit.toLocaleString()} LKR maximum` : ''}
+                error={
+                  lkrAmount && parseFloat(lkrAmount) < 1000 
+                    ? 'Minimum amount is 1000 LKR' 
+                    : parseFloat(lkrAmount) > onetimePurchaseLimit 
+                    ? `One time purchase limit is ${onetimePurchaseLimit.toLocaleString()} LKR maximum` 
+                    : ''
+                }
               />
             </div>
 
@@ -155,9 +161,9 @@ export default function AmountCalculator() {
           <Button 
             variant="secondary"
             onClick={handleNext}
-            disabled={!lkrAmount || !usdtAmount || parseFloat(usdtAmount) > availableUSDT || parseFloat(usdtAmount) <= 0 || parseFloat(lkrAmount) > 50000}
+            disabled={!lkrAmount || !usdtAmount || parseFloat(lkrAmount) < 1000 || parseFloat(lkrAmount) > onetimePurchaseLimit || parseFloat(usdtAmount) > availableUSDT || parseFloat(usdtAmount) <= 0}
             className={`${
-              !lkrAmount || !usdtAmount || parseFloat(usdtAmount) > availableUSDT || parseFloat(usdtAmount) <= 0 || parseFloat(lkrAmount) > 50000
+              !lkrAmount || !usdtAmount || parseFloat(lkrAmount) < 1000 || parseFloat(lkrAmount) > onetimePurchaseLimit || parseFloat(usdtAmount) > availableUSDT || parseFloat(usdtAmount) <= 0
                 ? 'opacity-50 cursor-not-allowed' 
                 : ''
             }`}

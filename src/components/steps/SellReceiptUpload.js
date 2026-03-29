@@ -11,6 +11,7 @@ import { toast } from 'react-hot-toast';
 export default function SellReceiptUpload() {
   const { nextStep, prevStep, updateExchangeData, exchangeData } = useExchange();
   const [uploadedFile, setUploadedFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef(null);
 
@@ -18,6 +19,14 @@ export default function SellReceiptUpload() {
   useEffect(() => {
     if (exchangeData?.sellReceipt) {
       setUploadedFile(exchangeData.sellReceipt);
+      // Create preview if it's an image
+      if (exchangeData.sellReceipt.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setPreviewUrl(reader.result);
+        };
+        reader.readAsDataURL(exchangeData.sellReceipt);
+      }
     }
   }, []);
 
@@ -37,6 +46,18 @@ export default function SellReceiptUpload() {
     }
 
     setUploadedFile(file);
+    
+    // Create preview for images
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewUrl(reader.result);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setPreviewUrl(null);
+    }
+    
     toast.success('Receipt uploaded successfully!');
   };
 
@@ -69,6 +90,7 @@ export default function SellReceiptUpload() {
 
   const removeFile = () => {
     setUploadedFile(null);
+    setPreviewUrl(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -81,53 +103,11 @@ export default function SellReceiptUpload() {
       return;
     }
 
-    submitSellData();
-  };
-
-  const submitSellData = async () => {
-    try {
-      const formDataToSend = new FormData();
-      
-      // Add receipt file
-      formDataToSend.append('receipt', uploadedFile);
-      
-      // Add form fields
-      formDataToSend.append('bank_name', exchangeData.sellData.bank);
-      formDataToSend.append('account_number', exchangeData.sellData.accountNumber);
-      formDataToSend.append('account_holder_name', exchangeData.sellData.accountHolderName);
-      formDataToSend.append('amount', exchangeData.sellData.amount);
-      formDataToSend.append('contact_number', exchangeData.sellData.whatsappNumber);
-      formDataToSend.append('network', exchangeData.sellData.network);
-
-      toast.loading('Submitting your request...');
-
-      const response = await fetch('https://swapgate-store-backend.onrender.com/api/sell-send-msg', {
-        method: 'POST',
-        body: formDataToSend
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to submit sell request');
-      }
-
-      const data = await response.json();
-      
-      toast.dismiss();
-      toast.success('Sell request submitted successfully!');
-      
-      // Save receipt to context and move to next step
-      updateExchangeData({
-        sellReceipt: uploadedFile
-      });
-      
-      // Move to next step (order summary/thank you)
-      nextStep();
-    } catch (error) {
-      toast.dismiss();
-      toast.error(error.message || 'Error submitting sell request. Please try again.');
-      console.error('API Error:', error);
-    }
+    // Save receipt and move to summary
+    updateExchangeData({
+      sellReceipt: uploadedFile
+    });
+    nextStep();
   };
 
   return (
@@ -216,6 +196,20 @@ export default function SellReceiptUpload() {
                   animate={{ opacity: 1, scale: 1 }}
                   className="border-2 border-green-400 bg-green-50 rounded-lg p-6"
                 >
+                  {/* Image Preview */}
+                  {previewUrl && (
+                    <div className="mb-6">
+                      <p className="text-sm font-semibold text-gray-700 mb-3">Preview:</p>
+                      <div className="relative rounded-lg overflow-hidden border-2 border-green-300 bg-white">
+                        <img
+                          src={previewUrl}
+                          alt="Receipt preview"
+                          className="w-full h-auto max-h-96 object-cover"
+                        />
+                      </div>
+                    </div>
+                  )}
+                  
                   <div className="flex items-start gap-4">
                     <div className="flex-shrink-0">
                       <FaCheckCircle size={32} className="text-green-600" />

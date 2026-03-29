@@ -11,6 +11,7 @@ import OrderSummary from './steps/OrderSummary';
 import ThankYouPage from './steps/ThankYouPage';
 import SellFlowPage from './steps/SellFlowPage';
 import SellReceiptUpload from './steps/SellReceiptUpload';
+import SellOrderSummary from './steps/SellOrderSummary';
 
 export default function ExchangeFlow() {
   const { exchangeData } = useExchange();
@@ -26,9 +27,9 @@ export default function ExchangeFlow() {
       case 3:
         return exchangeData.mode === 'sell' ? <SellReceiptUpload /> : <AmountCalculator />;
       case 4:
-        return <BankSelection />;
+        return exchangeData.mode === 'sell' ? <SellOrderSummary /> : <BankSelection />;
       case 5:
-        return <UserInfoForm />;
+        return <BankSelection />;
       case 6:
         return <OrderSummary />;
       case 7:

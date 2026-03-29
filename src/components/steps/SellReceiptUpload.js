@@ -81,10 +81,53 @@ export default function SellReceiptUpload() {
       return;
     }
 
-    updateExchangeData({
-      sellReceipt: uploadedFile
-    });
-    nextStep();
+    submitSellData();
+  };
+
+  const submitSellData = async () => {
+    try {
+      const formDataToSend = new FormData();
+      
+      // Add receipt file
+      formDataToSend.append('receipt', uploadedFile);
+      
+      // Add form fields
+      formDataToSend.append('bank_name', exchangeData.sellData.bank);
+      formDataToSend.append('account_number', exchangeData.sellData.accountNumber);
+      formDataToSend.append('account_holder_name', exchangeData.sellData.accountHolderName);
+      formDataToSend.append('amount', exchangeData.sellData.amount);
+      formDataToSend.append('contact_number', exchangeData.sellData.whatsappNumber);
+      formDataToSend.append('network', exchangeData.sellData.network);
+
+      toast.loading('Submitting your request...');
+
+      const response = await fetch('https://swapgate-store-backend.onrender.com/api/sell-send-msg', {
+        method: 'POST',
+        body: formDataToSend
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to submit sell request');
+      }
+
+      const data = await response.json();
+      
+      toast.dismiss();
+      toast.success('Sell request submitted successfully!');
+      
+      // Save receipt to context and move to next step
+      updateExchangeData({
+        sellReceipt: uploadedFile
+      });
+      
+      // Move to next step (order summary/thank you)
+      nextStep();
+    } catch (error) {
+      toast.dismiss();
+      toast.error(error.message || 'Error submitting sell request. Please try again.');
+      console.error('API Error:', error);
+    }
   };
 
   return (

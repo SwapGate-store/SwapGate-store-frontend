@@ -2,21 +2,21 @@
 
 import { motion } from 'framer-motion';
 import { useExchange } from '@/context/ExchangeContext';
-import { useRouter } from 'next/navigation';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 import { FaShoppingCart, FaMoneyBillWave } from 'react-icons/fa';
 
 export default function BuyOrSellPage() {
-  const { nextStep } = useExchange();
-  const router = useRouter();
+  const { nextStep, updateExchangeData } = useExchange();
 
   const handleBuy = () => {
+    updateExchangeData({ mode: 'buy' });
     nextStep();
   };
 
   const handleSell = () => {
-    window.location.href = 'https://swapgate-sell.onrender.com/';
+    updateExchangeData({ mode: 'sell' });
+    nextStep();
   };
 
   return (

@@ -9,6 +9,8 @@ import BankSelection from './steps/BankSelection';
 import UserInfoForm from './steps/UserInfoForm';
 import OrderSummary from './steps/OrderSummary';
 import ThankYouPage from './steps/ThankYouPage';
+import SellFlowPage from './steps/SellFlowPage';
+import SellReceiptUpload from './steps/SellReceiptUpload';
 
 export default function ExchangeFlow() {
   const { exchangeData } = useExchange();
@@ -20,9 +22,9 @@ export default function ExchangeFlow() {
       case 1:
         return <BuyOrSellPage />;
       case 2:
-        return <ExchangeSelection />;
+        return exchangeData.mode === 'sell' ? <SellFlowPage /> : <ExchangeSelection />;
       case 3:
-        return <AmountCalculator />;
+        return exchangeData.mode === 'sell' ? <SellReceiptUpload /> : <AmountCalculator />;
       case 4:
         return <BankSelection />;
       case 5:

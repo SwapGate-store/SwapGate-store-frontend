@@ -7,12 +7,15 @@ const ExchangeContext = createContext();
 export function ExchangeProvider({ children }) {
   const [exchangeData, setExchangeData] = useState({
     step: 0,
+    mode: null, // 'buy' or 'sell'
     exchange: null,
     exchangeId: '',
     lkrAmount: '',
     usdtAmount: '',
     usdtPrice: 0,
     selectedBank: null,
+    sellData: null,
+    sellReceipt: null,
     userInfo: {
       name: '',
       email: '',
@@ -36,12 +39,15 @@ export function ExchangeProvider({ children }) {
   const resetExchange = () => {
     setExchangeData({
       step: 0,
+      mode: null,
       exchange: null,
       exchangeId: '',
       lkrAmount: '',
       usdtAmount: '',
       usdtPrice: 0,
       selectedBank: null,
+      sellData: null,
+      sellReceipt: null,
       userInfo: {
         name: '',
         email: '',

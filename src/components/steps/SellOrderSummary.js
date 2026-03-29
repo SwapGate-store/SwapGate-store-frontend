@@ -14,32 +14,9 @@ export default function SellOrderSummary() {
   const [processingText, setProcessingText] = useState('Sending your request...');
   const [processComplete, setProcessComplete] = useState(false);
 
-  // Check if all required data is available
-  const hasRequiredData = 
-    exchangeData?.sellData && 
-    exchangeData?.sellReceipt && 
-    exchangeData.sellData.bank && 
-    exchangeData.sellData.accountNumber && 
-    exchangeData.sellData.accountHolderName && 
-    exchangeData.sellData.whatsappNumber && 
-    exchangeData.sellData.network && 
-    exchangeData.sellData.amount;
-
-  useEffect(() => {
-    if (!hasRequiredData) {
-      toast.error('Missing required form data. Please go back and fill all fields.');
-      console.warn('Missing sell data:', { 
-        sellData: exchangeData?.sellData, 
-        sellReceipt: exchangeData?.sellReceipt,
-        hasAllFields: hasRequiredData
-      });
-    } else {
-      console.log('All required data present:', {
-        sellData: exchangeData.sellData,
-        receipt: exchangeData.sellReceipt?.name
-      });
-    }
-  }, [hasRequiredData]);
+  // Get data safely
+  const sellData = exchangeData?.sellData || {};
+  const sellReceipt = exchangeData?.sellReceipt || null;
 
   // Simulate sending to Telegram with animation
   useEffect(() => {
@@ -73,9 +50,8 @@ export default function SellOrderSummary() {
       return;
     }
 
-    // Double-check all required data is present
-    if (!hasRequiredData) {
-      toast.error('Missing required information. Please go back and fill all fields.');
+    if (!sellData?.bank || !sellData?.amount || !sellReceipt) {
+      toast.error('Missing required information. Please go back and complete all fields.');
       return;
     }
 
@@ -84,19 +60,20 @@ export default function SellOrderSummary() {
     try {
       const formDataToSend = new FormData();
       
-      // Add receipt file - validate it's a File object
-      if (!exchangeData.sellReceipt || !(exchangeData.sellReceipt instanceof File)) {
-        throw new Error('Receipt file is invalid. Please upload again.');
+      // Add receipt file
+      if (sellReceipt instanceof File) {
+        formDataToSend.append('receipt', sellReceipt);
+      } else {
+        throw new Error('Invalid receipt file');
       }
-      formDataToSend.append('receipt', exchangeData.sellReceipt);
       
-      // Add form fields with validation
-      formDataToSend.append('bank_name', exchangeData.sellData?.bank || '');
-      formDataToSend.append('account_number', exchangeData.sellData?.accountNumber || '');
-      formDataToSend.append('account_holder_name', exchangeData.sellData?.accountHolderName || '');
-      formDataToSend.append('amount', exchangeData.sellData?.amount || '');
-      formDataToSend.append('contact_number', exchangeData.sellData?.whatsappNumber || '');
-      formDataToSend.append('network', exchangeData.sellData?.network || '');
+      // Add form fields with safe defaults
+      formDataToSend.append('bank_name', sellData.bank || '');
+      formDataToSend.append('account_number', sellData.accountNumber || '');
+      formDataToSend.append('account_holder_name', sellData.accountHolderName || '');
+      formDataToSend.append('amount', sellData.amount || '');
+      formDataToSend.append('contact_number', sellData.whatsappNumber || '');
+      formDataToSend.append('network', sellData.network || '');
 
       // Simulate processing steps
       await new Promise(resolve => setTimeout(resolve, 2000));
@@ -137,28 +114,6 @@ export default function SellOrderSummary() {
   };
 
   const data = exchangeData.sellData || {};
-
-  if (!hasRequiredData) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 py-10 px-4">
-        <div className="max-w-2xl mx-auto">
-          <Card className="p-8 text-center">
-            <FaTimesCircle size={48} className="text-red-600 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-gray-800 mb-3">Missing Information</h2>
-            <p className="text-gray-600 mb-6">
-              Some required information is missing. Please go back and complete all fields.
-            </p>
-            <button
-              onClick={prevStep}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg transition-all"
-            >
-              Go Back
-            </button>
-          </Card>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 py-10 px-4">

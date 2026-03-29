@@ -103,10 +103,20 @@ export default function SellReceiptUpload() {
       return;
     }
 
+    console.log('Saving receipt and navigating...');
+    console.log('Uploaded file:', {
+      name: uploadedFile.name,
+      size: uploadedFile.size,
+      type: uploadedFile.type
+    });
+    console.log('Current sellData:', exchangeData?.sellData);
+
     // Save receipt and move to summary
     updateExchangeData({
       sellReceipt: uploadedFile
     });
+    
+    console.log('Updated context with receipt, calling nextStep()');
     nextStep();
   };
 

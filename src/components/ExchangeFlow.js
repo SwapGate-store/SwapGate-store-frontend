@@ -29,10 +29,13 @@ export default function ExchangeFlow() {
       case 4:
         return exchangeData.mode === 'sell' ? <SellOrderSummary /> : <BankSelection />;
       case 5:
-        return <BankSelection />;
+        // Buy flow only - User information form
+        return <UserInfoForm />;
       case 6:
+        // Buy flow only - Order summary
         return <OrderSummary />;
       case 7:
+        // Both flows end here
         return <ThankYouPage />;
       default:
         return <WelcomePage />;

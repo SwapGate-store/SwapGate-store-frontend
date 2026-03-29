@@ -7,7 +7,7 @@ import { FaCheckCircle, FaSpinner, FaWhatsapp, FaBank, FaMoneyBillWave, FaGlobe 
 import { toast } from 'react-hot-toast';
 
 export default function SellOrderSummary() {
-  const { nextStep, prevStep, exchangeData } = useExchange();
+  const { nextStep, prevStep, exchangeData, updateExchangeData } = useExchange();
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingText, setProcessingText] = useState('Sending your request...');
@@ -94,7 +94,7 @@ export default function SellOrderSummary() {
       toast.success('Order placed successfully!');
       
       setTimeout(() => {
-        nextStep();
+        updateExchangeData({ step: 7 });
       }, 2000);
     } catch (error) {
       toast.error(error.message || 'Error placing order');

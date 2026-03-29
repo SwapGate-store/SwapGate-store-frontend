@@ -1,13 +1,12 @@
 'use client'
 
-import { motion } from 'framer-motion';
 import { useExchange } from '@/context/ExchangeContext';
 import { useState, useEffect } from 'react';
-import { FaCheckCircle, FaSpinner, FaWhatsapp, FaBank, FaMoneyBillWave, FaGlobe } from 'react-icons/fa';
+import { FaCheckCircle, FaSpinner, FaWhatsapp, FaMoneyBillWave, FaGlobe, FaBuilding } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
 
 export default function SellOrderSummary() {
-  const { nextStep, prevStep, exchangeData, updateExchangeData } = useExchange();
+  const { prevStep, exchangeData, updateExchangeData } = useExchange();
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingText, setProcessingText] = useState('Sending your request...');
@@ -145,7 +144,7 @@ export default function SellOrderSummary() {
             {/* Bank Details */}
             <div className="mb-8">
               <div className="flex items-center mb-4">
-                <FaBank className="text-blue-600 mr-3" size={24} />
+                <FaBuilding className="text-blue-600 mr-3" size={24} />
                 <h2 className="text-xl font-bold text-gray-800">Bank Details</h2>
               </div>
               <div className="grid md:grid-cols-2 gap-6">

@@ -92,9 +92,10 @@ export default function SellOrderSummary() {
       await new Promise(resolve => setTimeout(resolve, 4000));
       toast.success('Order placed successfully!');
       
-      setTimeout(() => {
-        updateExchangeData({ step: 7 });
-      }, 2000);
+      // Redirect to thank you page after a brief delay
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      setIsProcessing(false);
+      updateExchangeData({ step: 7 });
     } catch (error) {
       toast.error(error.message || 'Error placing order');
       console.error('Order error:', error);

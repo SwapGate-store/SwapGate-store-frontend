@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
-import { FaUniversity, FaUserCircle, FaWhatsapp, FaGlobe, FaDollarSign, FaExclamationTriangle } from 'react-icons/fa';
+import { FaUniversity, FaUserCircle, FaWhatsapp, FaGlobe, FaDollarSign, FaExclamationTriangle, FaSearch } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
 
 export default function SellFlowPage() {
@@ -229,18 +229,21 @@ export default function SellFlowPage() {
                 <FaUniversity className="text-green-600 mr-2" size={20} />
                 <label className="text-lg font-semibold text-gray-800">Select Bank</label>
               </div>
-              <select
-                value={formData.bank}
-                onChange={(e) => handleInputChange('bank', e.target.value)}
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-500 focus:outline-none bg-white text-gray-800 font-medium"
-              >
-                <option value="">Choose a bank...</option>
-                {bankList.map((bank, index) => (
-                  <option key={index} value={bank}>
-                    {bank}
-                  </option>
-                ))}
-              </select>
+              <div className="relative">
+                <select
+                  value={formData.bank}
+                  onChange={(e) => handleInputChange('bank', e.target.value)}
+                  className="w-full px-4 py-3 pr-12 border-2 border-gray-300 rounded-lg focus:border-green-500 focus:outline-none bg-white text-gray-800 font-medium appearance-none"
+                >
+                  <option value="">Choose a bank...</option>
+                  {bankList.map((bank, index) => (
+                    <option key={index} value={bank}>
+                      {bank}
+                    </option>
+                  ))}
+                </select>
+                <FaSearch className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-600 pointer-events-none" size={18} />
+              </div>
               
               {/* Quick Bank Access */}
               <div className="mt-4">

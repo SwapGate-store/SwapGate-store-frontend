@@ -4,7 +4,6 @@ import { useExchange } from '@/context/ExchangeContext';
 import { useState, useEffect } from 'react';
 import { FaCheckCircle, FaSpinner, FaWhatsapp, FaMoneyBillWave, FaGlobe, FaBuilding } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
-import html2pdf from 'html2pdf.js';
 
 export default function SellOrderSummary() {
   const { prevStep, exchangeData, updateExchangeData } = useExchange();
@@ -25,90 +24,97 @@ export default function SellOrderSummary() {
   };
 
   // Generate and Download Receipt
-  const generateAndDownloadReceipt = () => {
-    const orderId = `ORD-${Date.now()}`;
-    const timestamp = new Date().toLocaleString();
+  const generateAndDownloadReceipt = async () => {
+    try {
+      const html2pdf = (await import('html2pdf.js')).default;
+      
+      const orderId = `ORD-${Date.now()}`;
+      const timestamp = new Date().toLocaleString();
 
-    const receiptContent = `
-      <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px; background: white;">
-        <!-- Header -->
-        <div style="text-align: center; margin-bottom: 30px; border-bottom: 3px solid #10b981; padding-bottom: 20px;">
-          <h1 style="color: #10b981; margin: 0; font-size: 32px; font-weight: bold;">SwapGate</h1>
-          <p style="color: #666; margin: 5px 0; font-size: 14px;">USDT Exchange Receipt</p>
+      const receiptContent = `
+        <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px; background: white;">
+          <!-- Header -->
+          <div style="text-align: center; margin-bottom: 30px; border-bottom: 3px solid #10b981; padding-bottom: 20px;">
+            <h1 style="color: #10b981; margin: 0; font-size: 32px; font-weight: bold;">SwapGate</h1>
+            <p style="color: #666; margin: 5px 0; font-size: 14px;">USDT Exchange Receipt</p>
+          </div>
+
+          <!-- Order Info -->
+          <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; margin-bottom: 25px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+              <span style="color: #666; font-weight: 500;">Order ID:</span>
+              <span style="color: #1f2937; font-weight: bold; font-size: 14px;">${orderId}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: #666; font-weight: 500;">Date & Time:</span>
+              <span style="color: #1f2937; font-weight: bold; font-size: 14px;">${timestamp}</span>
+            </div>
+          </div>
+
+          <!-- Bank Details Section -->
+          <div style="margin-bottom: 25px; padding: 20px; border: 2px solid #10b981; border-radius: 8px; background: #f0fdf4;">
+            <h2 style="color: #10b981; margin: 0 0 15px 0; font-size: 16px; font-weight: bold;">Bank Details</h2>
+            <div style="margin-bottom: 12px;">
+              <p style="color: #666; margin: 0 0 5px 0; font-size: 12px; font-weight: 600;">Bank Name</p>
+              <p style="color: #1f2937; margin: 0; font-size: 14px; font-weight: bold;">${sellData.bank}</p>
+            </div>
+            <div style="margin-bottom: 12px;">
+              <p style="color: #666; margin: 0 0 5px 0; font-size: 12px; font-weight: 600;">Account Number</p>
+              <p style="color: #1f2937; margin: 0; font-size: 14px; font-weight: bold; font-family: 'Courier New', monospace;">${sellData.accountNumber}</p>
+            </div>
+            <div style="margin-bottom: 12px;">
+              <p style="color: #666; margin: 0 0 5px 0; font-size: 12px; font-weight: 600;">Account Holder Name</p>
+              <p style="color: #1f2937; margin: 0; font-size: 14px; font-weight: bold;">${sellData.accountHolderName}</p>
+            </div>
+            <div>
+              <p style="color: #666; margin: 0 0 5px 0; font-size: 12px; font-weight: 600;">WhatsApp Number</p>
+              <p style="color: #1f2937; margin: 0; font-size: 14px; font-weight: bold;">${sellData.whatsappNumber}</p>
+            </div>
+          </div>
+
+          <!-- Transaction Details Section -->
+          <div style="margin-bottom: 25px; padding: 20px; border: 2px solid #a78bfa; border-radius: 8px; background: #faf5ff;">
+            <h2 style="color: #7c3aed; margin: 0 0 15px 0; font-size: 16px; font-weight: bold;">Transaction Details</h2>
+            <div style="margin-bottom: 12px;">
+              <p style="color: #666; margin: 0 0 5px 0; font-size: 12px; font-weight: 600;">USDT Amount</p>
+              <p style="color: #1f2937; margin: 0; font-size: 18px; font-weight: bold; color: #fbbf24;">${sellData.amount} USDT</p>
+            </div>
+            <div style="margin-bottom: 12px;">
+              <p style="color: #666; margin: 0 0 5px 0; font-size: 12px; font-weight: 600;">Network</p>
+              <p style="color: #1f2937; margin: 0; font-size: 14px; font-weight: bold;">${sellData.network}</p>
+            </div>
+            <div>
+              <p style="color: #666; margin: 0 0 5px 0; font-size: 12px; font-weight: 600;">Receiving Address</p>
+              <p style="color: #1f2937; margin: 0; font-size: 13px; font-weight: bold; font-family: 'Courier New', monospace; word-break: break-all; background: white; padding: 8px; border-radius: 4px;">${networkDetails[sellData.network]}</p>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #e5e7eb;">
+            <p style="color: #666; margin: 0 0 8px 0; font-size: 12px;">Thank you for using SwapGate</p>
+            <p style="color: #999; margin: 0; font-size: 11px;">Please keep this receipt for your records</p>
+          </div>
         </div>
+      `;
 
-        <!-- Order Info -->
-        <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; margin-bottom: 25px;">
-          <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-            <span style="color: #666; font-weight: 500;">Order ID:</span>
-            <span style="color: #1f2937; font-weight: bold; font-size: 14px;">${orderId}</span>
-          </div>
-          <div style="display: flex; justify-content: space-between;">
-            <span style="color: #666; font-weight: 500;">Date & Time:</span>
-            <span style="color: #1f2937; font-weight: bold; font-size: 14px;">${timestamp}</span>
-          </div>
-        </div>
+      const element = document.createElement('div');
+      element.innerHTML = receiptContent;
 
-        <!-- Bank Details Section -->
-        <div style="margin-bottom: 25px; padding: 20px; border: 2px solid #10b981; border-radius: 8px; background: #f0fdf4;">
-          <h2 style="color: #10b981; margin: 0 0 15px 0; font-size: 16px; font-weight: bold;">Bank Details</h2>
-          <div style="margin-bottom: 12px;">
-            <p style="color: #666; margin: 0 0 5px 0; font-size: 12px; font-weight: 600;">Bank Name</p>
-            <p style="color: #1f2937; margin: 0; font-size: 14px; font-weight: bold;">${sellData.bank}</p>
-          </div>
-          <div style="margin-bottom: 12px;">
-            <p style="color: #666; margin: 0 0 5px 0; font-size: 12px; font-weight: 600;">Account Number</p>
-            <p style="color: #1f2937; margin: 0; font-size: 14px; font-weight: bold; font-family: 'Courier New', monospace;">${sellData.accountNumber}</p>
-          </div>
-          <div style="margin-bottom: 12px;">
-            <p style="color: #666; margin: 0 0 5px 0; font-size: 12px; font-weight: 600;">Account Holder Name</p>
-            <p style="color: #1f2937; margin: 0; font-size: 14px; font-weight: bold;">${sellData.accountHolderName}</p>
-          </div>
-          <div>
-            <p style="color: #666; margin: 0 0 5px 0; font-size: 12px; font-weight: 600;">WhatsApp Number</p>
-            <p style="color: #1f2937; margin: 0; font-size: 14px; font-weight: bold;">${sellData.whatsappNumber}</p>
-          </div>
-        </div>
+      const options = {
+        margin: 10,
+        filename: `SwapGate-Receipt-ORD-${Date.now()}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' },
+        pagebreak: { avoid: ['tr', '.avoid-break'] }
+      };
 
-        <!-- Transaction Details Section -->
-        <div style="margin-bottom: 25px; padding: 20px; border: 2px solid #a78bfa; border-radius: 8px; background: #faf5ff;">
-          <h2 style="color: #7c3aed; margin: 0 0 15px 0; font-size: 16px; font-weight: bold;">Transaction Details</h2>
-          <div style="margin-bottom: 12px;">
-            <p style="color: #666; margin: 0 0 5px 0; font-size: 12px; font-weight: 600;">USDT Amount</p>
-            <p style="color: #1f2937; margin: 0; font-size: 18px; font-weight: bold; color: #fbbf24;">${sellData.amount} USDT</p>
-          </div>
-          <div style="margin-bottom: 12px;">
-            <p style="color: #666; margin: 0 0 5px 0; font-size: 12px; font-weight: 600;">Network</p>
-            <p style="color: #1f2937; margin: 0; font-size: 14px; font-weight: bold;">${sellData.network}</p>
-          </div>
-          <div>
-            <p style="color: #666; margin: 0 0 5px 0; font-size: 12px; font-weight: 600;">Receiving Address</p>
-            <p style="color: #1f2937; margin: 0; font-size: 13px; font-weight: bold; font-family: 'Courier New', monospace; word-break: break-all; background: white; padding: 8px; border-radius: 4px;">${networkDetails[sellData.network]}</p>
-          </div>
-        </div>
-
-        <!-- Footer -->
-        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #e5e7eb;">
-          <p style="color: #666; margin: 0 0 8px 0; font-size: 12px;">Thank you for using SwapGate</p>
-          <p style="color: #999; margin: 0; font-size: 11px;">Please keep this receipt for your records</p>
-        </div>
-      </div>
-    `;
-
-    const element = document.createElement('div');
-    element.innerHTML = receiptContent;
-
-    const options = {
-      margin: 10,
-      filename: `SwapGate-Receipt-ORD-${Date.now()}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2 },
-      jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' },
-      pagebreak: { avoid: ['tr', '.avoid-break'] }
-    };
-
-    html2pdf().set(options).from(element).save();
-    toast.success('Receipt downloaded successfully!');
+      html2pdf().set(options).from(element).save();
+      toast.success('Receipt downloaded successfully!');
+    } catch (error) {
+      console.error('Error generating receipt:', error);
+      toast.error('Error generating receipt');
+    }
   };
 
   // Animation for processing messages
@@ -188,7 +194,7 @@ export default function SellOrderSummary() {
       toast.success('Order placed successfully!');
       
       // Generate and download receipt after successful order
-      generateAndDownloadReceipt();
+      await generateAndDownloadReceipt();
       
       // Redirect to thank you page after a brief delay
       await new Promise(resolve => setTimeout(resolve, 2000));

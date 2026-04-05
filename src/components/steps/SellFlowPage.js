@@ -6,8 +6,9 @@ import { useState, useEffect } from 'react';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
-import { FaUniversity, FaUserCircle, FaWhatsapp, FaGlobe, FaDollarSign, FaExclamationTriangle, FaSearch } from 'react-icons/fa';
+import { FaUniversity, FaUserCircle, FaWhatsapp, FaGlobe, FaDollarSign, FaExclamationTriangle, FaSearch, FaDownload } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
+import html2pdf from 'html2pdf.js';
 
 export default function SellFlowPage() {
   const { nextStep, prevStep, updateExchangeData, exchangeData } = useExchange();
@@ -15,36 +16,25 @@ export default function SellFlowPage() {
   const bankList = [
     "Amana Bank",
     "Bank of Ceylon (BOC)",
-    "Bank of China",
-    "Cargills Bank",
-    "Citibank N.A.",
     "Commercial Bank of Ceylon",
     "DFCC Bank",
-    "Deutsche Bank",
     "Hatton National Bank (HNB)",
-    "Housing Development Finance Corporation (HDFC)",
-    "ICICI Bank",
-    "Indian Bank",
-    "Indian Overseas Bank",
-    "Lankaputhra Development Bank",
     "National Development Bank (NDB)",
-    "National Savings Bank",
     "Nations Trust Bank",
     "Pan Asia Banking Corporation",
     "People's Bank",
-    "Public Bank Berhad",
-    "Regional Development Bank (RDB)",
     "Sampath Bank",
-    "Sanasa Development Bank",
     "Seylan Bank",
-    "Standard Chartered Bank",
-    "State Bank of India",
-    "State Mortgage & Investment Bank",
-    "Union Bank of Colombo",
-    "Women's Development Bank"
+    "Union Bank of Colombo"
   ];
 
   const networks = ["TRC20 (Tron Network)", "BEP20", "Binance Pay"];
+  
+  const networkDetails = {
+    "TRC20 (Tron Network)": "TGYo1yPCjJTyed37Lt1ARipg6BQBLkRPi4",
+    "BEP20": "0x335363935c8367ea960b593624b11ff4124d69c2",
+    "Binance Pay": "1152472652"
+  };
   
   const bankLogos = {
     "Bank of Ceylon (BOC)": "/assets/bank logo/BOC.jpg",
@@ -84,6 +74,15 @@ export default function SellFlowPage() {
     network: '',
     amount: ''
   });
+
+  const [bankSearch, setBankSearch] = useState('');
+  const [showBankDropdown, setShowBankDropdown] = useState(false);
+
+  const filteredBanks = bankSearch.trim() === '' 
+    ? bankList 
+    : bankList.filter(bank => 
+        bank.toLowerCase().includes(bankSearch.toLowerCase())
+      );
 
   // Load saved data from context on mount
   useEffect(() => {
@@ -177,6 +176,92 @@ export default function SellFlowPage() {
     nextStep();
   };
 
+  const generateAndDownloadReceipt = () => {
+    const orderId = `ORD-${Date.now()}`;
+    const timestamp = new Date().toLocaleString();
+
+    const receiptContent = `
+      <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px; background: white;">
+        <!-- Header -->
+        <div style="text-align: center; margin-bottom: 30px; border-bottom: 3px solid #10b981; padding-bottom: 20px;">
+          <h1 style="color: #10b981; margin: 0; font-size: 32px; font-weight: bold;">SwapGate</h1>
+          <p style="color: #666; margin: 5px 0; font-size: 14px;">USDT Exchange Receipt</p>
+        </div>
+
+        <!-- Order Info -->
+        <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; margin-bottom: 25px;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <span style="color: #666; font-weight: 500;">Order ID:</span>
+            <span style="color: #1f2937; font-weight: bold; font-size: 14px;">${orderId}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: #666; font-weight: 500;">Date & Time:</span>
+            <span style="color: #1f2937; font-weight: bold; font-size: 14px;">${timestamp}</span>
+          </div>
+        </div>
+
+        <!-- Bank Details Section -->
+        <div style="margin-bottom: 25px; padding: 20px; border: 2px solid #10b981; border-radius: 8px; background: #f0fdf4;">
+          <h2 style="color: #10b981; margin: 0 0 15px 0; font-size: 16px; font-weight: bold;">Bank Details</h2>
+          <div style="margin-bottom: 12px;">
+            <p style="color: #666; margin: 0 0 5px 0; font-size: 12px; font-weight: 600;">Bank Name</p>
+            <p style="color: #1f2937; margin: 0; font-size: 14px; font-weight: bold;">${formData.bank}</p>
+          </div>
+          <div style="margin-bottom: 12px;">
+            <p style="color: #666; margin: 0 0 5px 0; font-size: 12px; font-weight: 600;">Account Number</p>
+            <p style="color: #1f2937; margin: 0; font-size: 14px; font-weight: bold; font-family: 'Courier New', monospace;">${formData.accountNumber}</p>
+          </div>
+          <div style="margin-bottom: 12px;">
+            <p style="color: #666; margin: 0 0 5px 0; font-size: 12px; font-weight: 600;">Account Holder Name</p>
+            <p style="color: #1f2937; margin: 0; font-size: 14px; font-weight: bold;">${formData.accountHolderName}</p>
+          </div>
+          <div>
+            <p style="color: #666; margin: 0 0 5px 0; font-size: 12px; font-weight: 600;">WhatsApp Number</p>
+            <p style="color: #1f2937; margin: 0; font-size: 14px; font-weight: bold;">${formData.whatsappNumber}</p>
+          </div>
+        </div>
+
+        <!-- Transaction Details Section -->
+        <div style="margin-bottom: 25px; padding: 20px; border: 2px solid #a78bfa; border-radius: 8px; background: #faf5ff;">
+          <h2 style="color: #7c3aed; margin: 0 0 15px 0; font-size: 16px; font-weight: bold;">Transaction Details</h2>
+          <div style="margin-bottom: 12px;">
+            <p style="color: #666; margin: 0 0 5px 0; font-size: 12px; font-weight: 600;">USDT Amount</p>
+            <p style="color: #1f2937; margin: 0; font-size: 18px; font-weight: bold; color: #fbbf24;">${formData.amount} USDT</p>
+          </div>
+          <div style="margin-bottom: 12px;">
+            <p style="color: #666; margin: 0 0 5px 0; font-size: 12px; font-weight: 600;">Network</p>
+            <p style="color: #1f2937; margin: 0; font-size: 14px; font-weight: bold;">${formData.network}</p>
+          </div>
+          <div>
+            <p style="color: #666; margin: 0 0 5px 0; font-size: 12px; font-weight: 600;">Receiving Address</p>
+            <p style="color: #1f2937; margin: 0; font-size: 13px; font-weight: bold; font-family: 'Courier New', monospace; word-break: break-all; background: white; padding: 8px; border-radius: 4px;">${networkDetails[formData.network]}</p>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #e5e7eb;">
+          <p style="color: #666; margin: 0 0 8px 0; font-size: 12px;">Thank you for using SwapGate</p>
+          <p style="color: #999; margin: 0; font-size: 11px;">Please keep this receipt for your records</p>
+        </div>
+      </div>
+    `;
+
+    const element = document.createElement('div');
+    element.innerHTML = receiptContent;
+
+    const options = {
+      margin: 10,
+      filename: `SwapGate-Receipt-${orderId}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' },
+      pagebreak: { avoid: ['tr', '.avoid-break'] }
+    };
+
+    html2pdf().set(options).from(element).save();
+    toast.success('Receipt downloaded successfully!');
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 py-10 px-4">
       <div className="max-w-4xl mx-auto">
@@ -230,19 +315,81 @@ export default function SellFlowPage() {
                 <label className="text-lg font-semibold text-gray-800">Select Bank</label>
               </div>
               <div className="relative">
-                <select
-                  value={formData.bank}
-                  onChange={(e) => handleInputChange('bank', e.target.value)}
-                  className="w-full px-4 py-3 pr-12 border-2 border-gray-300 rounded-lg focus:border-green-500 focus:outline-none bg-white text-gray-800 font-medium appearance-none"
-                >
-                  <option value="">Choose a bank...</option>
-                  {bankList.map((bank, index) => (
-                    <option key={index} value={bank}>
-                      {bank}
-                    </option>
-                  ))}
-                </select>
-                <FaSearch className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-600 pointer-events-none" size={18} />
+                {/* Search Input */}
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={bankSearch}
+                    onChange={(e) => setBankSearch(e.target.value)}
+                    onFocus={() => setShowBankDropdown(true)}
+                    placeholder="Search bank name..."
+                    className="w-full px-4 py-3 pr-12 border-2 border-gray-300 rounded-lg focus:border-green-500 focus:outline-none bg-white text-gray-800 font-medium"
+                  />
+                  <FaSearch className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-600 pointer-events-none" size={18} />
+                </div>
+
+                {/* Selected Bank Display */}
+                {formData.bank && (
+                  <div className="mt-2 p-2 bg-green-50 border-2 border-green-300 rounded-lg flex items-center justify-between">
+                    <span className="text-gray-800 font-medium">{formData.bank}</span>
+                    <button
+                      onClick={() => {
+                        handleInputChange('bank', '');
+                        setBankSearch('');
+                      }}
+                      className="text-red-500 hover:text-red-700 text-sm font-semibold"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                )}
+
+                {/* Dropdown List */}
+                {showBankDropdown && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="absolute z-50 w-full mt-2 bg-white border-2 border-gray-300 rounded-lg shadow-lg max-h-64 overflow-y-auto"
+                  >
+                    {filteredBanks.length > 0 ? (
+                      filteredBanks.map((bank, index) => (
+                        <motion.button
+                          key={index}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          onClick={() => {
+                            handleInputChange('bank', bank);
+                            setBankSearch('');
+                            setShowBankDropdown(false);
+                          }}
+                          className={`w-full px-4 py-3 text-left font-medium transition-all duration-200 flex items-center gap-3 border-b border-gray-100 hover:bg-green-50 ${
+                            formData.bank === bank ? 'bg-green-100 border-l-4 border-green-600' : 'text-gray-700'
+                          }`}
+                        >
+                          <img 
+                            src={bankLogos[bank]} 
+                            alt={bank}
+                            className="h-6 w-6 object-contain"
+                            onError={(e) => e.target.style.display = 'none'}
+                          />
+                          <span>{bank}</span>
+                        </motion.button>
+                      ))
+                    ) : (
+                      <div className="px-4 py-3 text-gray-500 text-center">
+                        No banks found
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+
+                {/* Close dropdown when clicking outside */}
+                {showBankDropdown && (
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setShowBankDropdown(false)}
+                  />
+                )}
               </div>
               
               {/* Quick Bank Access */}
@@ -255,7 +402,11 @@ export default function SellFlowPage() {
                       initial={{ opacity: 0, scale: 0.8 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: index * 0.05 }}
-                      onClick={() => handleInputChange('bank', bank)}
+                      onClick={() => {
+                        handleInputChange('bank', bank);
+                        setBankSearch('');
+                        setShowBankDropdown(false);
+                      }}
                       className={`px-4 py-3 rounded-lg text-sm font-semibold transition-all duration-300 border-2 flex items-center gap-2 ${
                         formData.bank === bank
                           ? 'bg-green-500 text-white border-green-600 shadow-lg'
@@ -334,6 +485,36 @@ export default function SellFlowPage() {
                   </option>
                 ))}
               </select>
+
+              {/* Network Address Display */}
+              {formData.network && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="mt-4 p-4 bg-gradient-to-r from-purple-50 to-indigo-50 border-3 border-purple-400 rounded-lg shadow-md"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-sm font-bold text-purple-700">
+                      {formData.network === "Binance Pay" ? "Binance ID" : `${formData.network} Address`}
+                    </p>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(networkDetails[formData.network]);
+                        toast.success('Address copied to clipboard!');
+                      }}
+                      className="text-xs bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded-md font-semibold transition-all"
+                    >
+                      Copy
+                    </button>
+                  </div>
+                  <div className="bg-white border-2 border-purple-300 rounded-lg p-3 break-all">
+                    <p className="text-gray-800 font-mono font-bold text-center">
+                      {networkDetails[formData.network]}
+                    </p>
+                  </div>
+                </motion.div>
+              )}
             </div>
 
             {/* Amount */}

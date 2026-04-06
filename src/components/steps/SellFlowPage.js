@@ -205,12 +205,28 @@ export default function SellFlowPage() {
               <FaExclamationTriangle className="text-green-600 mr-3 mt-1 flex-shrink-0" size={20} />
               <div>
                 <p className="text-gray-700 font-semibold mb-2">Important Instructions:</p>
-                <p className="text-gray-600 text-sm leading-relaxed">
+                <ul>
+                  <li>
+                    <p className="text-red-600 text-sm leading-relaxed">
                   ඔබට USDT Sell කර මුදල් ලබා ගැනීමට අවශ්‍ය නිවැරදි දත්ත පුරවන්න
-                </p>
-                <p className="text-gray-600 text-sm leading-relaxed">
+                    </p> 
+                  </li>
+                  <li>
+                <p className="text-red-600 text-sm leading-relaxed">
                   අඩුම usdt 2 සිට sell කිරීමට හැකියාවක් ඇත ।
                 </p>
+                </li>
+                <li>
+                <p className="text-red-600 text-sm leading-relaxed">
+                  අන්තිමට සම්පූර්ණ  process  එක  වන තුරැ සිටින්න . නැතහොත් Recipt එක නොලැබෙනු ඇත ।
+                </p>
+                </li>
+                <li>
+                <p className="text-red-600 text-sm leading-relaxed">
+                  මෙතන ඔබ කැමති network  එක තෝරා  usdt deposit  කරන්න.ඉදිරියේදි resist  එක upload  කරන්න අවශ්‍ය  වන තැන ඔබට මුනගැසෙනු ඇත ।
+                </p>
+                </li>
+                </ul>
               </div>
             </div>
           </Card>

@@ -4,6 +4,7 @@ import { useExchange } from '@/context/ExchangeContext';
 import { useState, useEffect } from 'react';
 import { FaCheckCircle, FaSpinner, FaWhatsapp, FaMoneyBillWave, FaGlobe, FaBuilding } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
+import { saveSellSummary } from '@/utils/firebase';
 
 export default function SellOrderSummary() {
   const { prevStep, exchangeData, updateExchangeData } = useExchange();
@@ -192,6 +193,15 @@ export default function SellOrderSummary() {
 
       await new Promise(resolve => setTimeout(resolve, 4000));
       toast.success('Order placed successfully!');
+      
+      // Save sell data to Firebase
+      try {
+        await saveSellSummary(sellData);
+        console.log('Sell data saved to Firebase successfully');
+      } catch (error) {
+        console.error('Error saving sell data to Firebase:', error);
+        // Don't block order flow if Firebase save fails
+      }
       
       // Generate and download receipt after successful order
       await generateAndDownloadReceipt();

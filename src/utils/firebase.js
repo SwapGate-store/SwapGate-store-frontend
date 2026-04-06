@@ -57,7 +57,7 @@ export async function saveCheckoutData(checkoutData) {
   }
 }
 
-// Save user input summary (without receipt)
+// Save user input summary (without receipt) - BUY PAGE
 export async function saveUserSummary(summaryData) {
   try {
     // Create custom document ID with format: "date - name"
@@ -80,6 +80,34 @@ export async function saveUserSummary(summaryData) {
     return documentId;
   } catch (error) {
     console.error('Error saving user summary:', error);
+    throw error;
+  }
+}
+
+// Save sell summary to Firebase - SELL PAGE
+export async function saveSellSummary(sellData) {
+  try {
+    // Create custom document ID with format: "date - accountHolderName"
+    const currentDate = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD format
+    const sanitizedName = sellData.accountHolderName.replace(/[^a-zA-Z0-9\s]/g, '').trim(); // Remove special characters
+    const documentId = `${currentDate} - ${sanitizedName}`;
+    
+    const docRef = doc(db, 'sell_summaries', documentId);
+    await setDoc(docRef, {
+      bank: sellData.bank,
+      accountNumber: sellData.accountNumber,
+      accountHolderName: sellData.accountHolderName,
+      whatsappNumber: sellData.whatsappNumber,
+      network: sellData.network,
+      amount: sellData.amount,
+      createdAt: serverTimestamp(),
+      timestamp: new Date().toISOString()
+    });
+    
+    console.log('Sell summary saved with ID: ', documentId);
+    return documentId;
+  } catch (error) {
+    console.error('Error saving sell summary:', error);
     throw error;
   }
 }

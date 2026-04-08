@@ -1,0 +1,204 @@
+=====================================================
+  SWAPGATE STORE FRONTEND — HOME PAGE STRUCTURE & STYLE
+=====================================================
+
+------------------------------------------------------
+1. ENTRY POINT: src/app/page.js
+------------------------------------------------------
+The root page renders:
+  <ExchangeProvider>         ← wraps the whole page with exchange state
+    <ExchangeFlow />         ← controls which step/screen to show
+  </ExchangeProvider>
+
+ExchangeFlow (src/components/ExchangeFlow.js) uses a step-based router:
+  Step 0  → WelcomePage        ← THE HOME PAGE (landing screen)
+  Step 1  → BuyOrSellPage
+  Step 2  → SellFlowPage / ExchangeSelection
+  Step 3  → SellReceiptUpload / AmountCalculator
+  Step 4  → SellOrderSummary / BankSelection
+  Step 5  → UserInfoForm
+  Step 6  → OrderSummary
+  Step 7  → ThankYouPage
+
+------------------------------------------------------
+2. GLOBAL LAYOUT: src/app/layout.js
+------------------------------------------------------
+Fonts loaded (Google Fonts via next/font):
+  - Geist Sans       → CSS var: --font-geist-sans
+  - Geist Mono       → CSS var: --font-geist-mono
+  - Pacifico (400)   → CSS var: --font-pacifico    (used for logo title)
+  - Poppins (300–700)→ CSS var: --font-poppins     (default body font)
+
+Body classes: antialiased font-poppins
+
+Metadata:
+  title:       "SwapGate - USDT/LKR Exchange"
+  description: "Secure cryptocurrency exchange for USDT/LKR trading"
+  favicon:     /assets/logo.png
+
+Providers wrapping all pages:
+  <USDTProvider>
+    <StoreSettingsProvider>
+      <div class="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
+        {children}
+        <StoreStatusBadge />     ← fixed top-right badge
+      </div>
+    </StoreSettingsProvider>
+  </USDTProvider>
+  <Toaster position="top-right" />  ← dark toast notifications
+
+------------------------------------------------------
+3. HOME PAGE (Step 0): src/components/steps/WelcomePage.js
+------------------------------------------------------
+
+OUTER WRAPPER
+  - Full viewport height screen
+  - Background: linear gradient  blue-600 → blue-700 → green-600
+    (class: bg-gradient-to-br from-blue-600 via-blue-700 to-green-600)
+  - overflow-hidden, relative positioning
+
+BACKGROUND DECORATION
+  - A semi-transparent white diagonal stripe across the page
+    (absolute inset-0, skew-y-12, translated -50% vertically)
+    using: bg-gradient-to-r from-transparent via-white/5 to-transparent
+
+TOP-LEFT LOGO
+  - Absolute positioned: top-6 left-6, z-index 20
+  - SwapGate logo image (/assets/logo.png), 60×60px
+  - Framer Motion: whileHover scale 1.1 / whileTap scale 0.95
+  - Clicking navigates to /admin
+
+MAIN CONTENT (centered)
+  - Flexbox, centered vertically and horizontally (min-h-screen)
+  - Container: max-w-4xl, mx-auto, text-center, z-index 10
+
+  [1] TITLE "SwapGate"
+      - Font: font-pacifico (Pacifico)
+      - Size: text-6xl (mobile) / text-8xl (md+)
+      - Color: text-white with drop-shadow-lg
+      - Animation (Framer Motion):
+          Entry: opacity 0→1, scale 0.5→1, rotateY -180→0
+          Duration: 1.2s spring (stiffness 100, damping 15)
+          Hover: scale 1.05, white text glow
+
+  [2] SUBTITLE "Your Secure USDT/LKR Exchange"
+      - Font: font-light
+      - Size: text-xl (mobile) / text-2xl (md+)
+      - Color: text-blue-100
+      - Animation (Framer Motion):
+          Entry: opacity 0→1, x -100→0 (slides in from left)
+          Duration: 0.8s spring, delay 0.5s
+          Hover: scale 1.02
+
+  [3] STORE STATUS DISPLAY (conditional)
+      - Shown only when store is CLOSED
+      - Red badge: bg-red-600 text-white, rounded-lg, border-4 border-red-500
+        Padding: px-8 py-4, inline-block, shadow-2xl
+      - Content: lock icon (FaLock) + "CLOSED" text (text-2xl font-bold)
+        + status message (text-sm, 90% opacity)
+      - Animation: scale 0→1, spring, delay 1s
+
+  [4] CTA BUTTON
+      - "Start Exchange →" (when open) / "Store Closed" (when closed)
+      - Inline styles (not Tailwind):
+          OPEN:   bg white, color #1e3a8a (dark blue), borderRadius 25px,
+                  padding 12px 32px, fontSize 18px, font-weight 600,
+                  boxShadow 0 10px 25px rgba(0,0,0,0.2)
+          CLOSED: bg #6b7280 (gray), color #9ca3af, opacity 0.6,
+                  cursor not-allowed
+      - Animation (Framer Motion):
+          Entry: opacity 0→1, y 100→0, scale 0.8→1, spring, delay 1.3s
+          Hover (open only): scale 1.1, bg #f0f9ff, stronger shadow, rotateZ 2°
+          Tap (open only): scale 0.95, rotateZ -2°
+          Inner span slides x+5 on hover
+      - When closed: shows grey text below:
+          "Please visit us during store hours: 8:00 AM - 11:00 PM"
+
+------------------------------------------------------
+4. STORE STATUS BADGE (always visible): 
+   src/components/ui/StoreStatusBadge.js
+------------------------------------------------------
+  - Fixed: top-4 right-4, z-index 50
+  - Pill shape: rounded-full, px-4 py-2, shadow-lg, border-2, backdrop-blur-sm
+  - OPEN:   bg-green-500/90, border-green-400, text-white
+  - CLOSED: bg-red-500/90, border-red-400, text-white
+  - Contains: FaStore icon + "OPEN"/"CLOSED" text + FaClock (if closed)
+  - Hover: scale 1.05
+  - On hover: tooltip appears below showing status message + current time
+    (bg-gray-900 text-white text-xs rounded-lg p-3)
+
+------------------------------------------------------
+5. UI COMPONENT STYLES
+------------------------------------------------------
+
+Button (src/components/ui/Button.js)
+  Base:      inline-flex, items-center, justify-center,
+             rounded-lg, font-medium, transition-all 200ms,
+             focus:outline-none, focus:ring-2, focus:ring-offset-2
+  Variants:
+    primary:   gradient blue-600→green-600 text-white
+    secondary: bg-white text-gray-700 border border-gray-300
+    outline:   border-2 border-blue-600 text-blue-600 → fills on hover
+    danger:    bg-red-600 text-white
+  Sizes:
+    sm:      px-3 py-2 text-sm
+    default: px-4 py-2 text-base
+    lg:      px-6 py-3 text-lg
+  Framer Motion: whileHover scale 1.02, whileTap scale 0.98
+
+Card (src/components/ui/Card.js)
+  Base:  bg-white rounded-xl shadow-lg border border-gray-100
+  Framer Motion entry: opacity 0→1, y 20→0, 0.3s
+  whileHover: lifts y -2px, stronger shadow
+
+------------------------------------------------------
+6. GLOBAL CSS: src/app/globals.css
+------------------------------------------------------
+  CSS Variables:
+    --background: #ffffff (light) / #0a0a0a (dark mode)
+    --foreground: #171717 (light) / #ededed (dark mode)
+
+  Body:
+    background: var(--background)
+    color: var(--foreground)
+    font-family: Arial, Helvetica, sans-serif  (overridden by Poppins via layout)
+
+  Custom Scrollbar (.scrollbar-thin):
+    scrollbar-width: thin
+    scrollbar-color: #d1d5db #f3f4f6
+    WebKit width: 6px
+    Track bg: #f3f4f6, radius 3px
+    Thumb bg: #d1d5db → #9ca3af on hover, radius 3px
+
+------------------------------------------------------
+7. TAILWIND CONFIG: tailwind.config.js
+------------------------------------------------------
+  Custom Fonts:
+    'pacifico' → var(--font-pacifico)
+    'poppins'  → var(--font-poppins)
+
+  Custom Animations:
+    'fade-in'  → fadeIn 0.5s ease-in-out  (opacity 0→1)
+    'slide-up' → slideUp 0.5s ease-out    (translateY 20px→0, opacity 0→1)
+
+------------------------------------------------------
+8. KEY COLORS USED ON HOME PAGE
+------------------------------------------------------
+  Blue gradient:   from-blue-600 (#2563eb) via-blue-700 (#1d4ed8) to-green-600 (#16a34a)
+  White text:      #ffffff
+  Subtitle:        text-blue-100 (#dbeafe)
+  Button bg:       #ffffff (open) / #6b7280 (closed)
+  Button text:     #1e3a8a (dark blue, open) / #9ca3af (gray, closed)
+  Closed badge:    bg-red-600 (#dc2626), border-red-500
+  Open badge:      bg-green-500/90
+  Closed badge:    bg-red-500/90
+
+------------------------------------------------------
+9. ANIMATION LIBRARY
+------------------------------------------------------
+  Framer Motion is used throughout for:
+    - Page entry animations (fade in, slide in, scale up)
+    - Interactive hover/tap feedback on buttons and cards
+    - Spring physics animations for the main title
+    - Delayed sequential reveal of elements
+=====================================================
